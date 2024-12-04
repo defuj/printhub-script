@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "emitDeclarationOnly": true,
+    "target": "ESNext", // Target output ECMAScript version
+    "module": "ESNext", // Output module system (ESM)
+    "moduleResolution": "node", // Gunakan cara node untuk resolve module
+    "declaration": true, // Menghasilkan file .d.ts untuk tipe
+    "sourceMap": true, // Membuat peta sumber untuk debugging
+    "outDir": "./dist", // Output build akan disimpan di folder 'dist'
+    "declarationDir": "./dist/types", // Output file .d.ts akan disimpan di folder 'dist/types'
+    "esModuleInterop": true, // Interoperabilitas dengan CommonJS modules
+    "skipLibCheck": true, // Menghindari pengecekan tipe pada file library
+    "strict": true, // Aktifkan pengecekan tipe yang ketat
+    "lib": ["ESNext", "DOM"], // Menyertakan tipe DOM dan ESNext
+    "allowJs": true, // Mengizinkan file JavaScript jika perlu
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,56 @@
+{
+  "name": "printhub",
+  "version": "1.0.12",
+  "description": "A javascript plugin for Bluetooth & USB printers.",
+  "main": "./dist/index.global.js",
+  "module": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.mjs"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/defuj/printhub.git"
+  },
+  "keywords": [
+    "javascript",
+    "typescript",
+    "print",
+    "printer-thermal",
+    "printer-usb",
+    "bluetooth",
+    "USB",
+    "printer-thermal-bluetooth",
+    "print-receipt",
+    "print-bill",
+    "print-invoice",
+    "html"
+  ],
+  "author": "Dede Fuji Abdul",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/defuj/printhub/issues"
+  },
+  "homepage": "https://github.com/defuj/printhub#readme",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsup && tsc"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^12.1.1",
+    "@types/node": "^22.10.1",
+    "@types/web-bluetooth": "^0.0.20",
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3",
+    "usb": "^2.14.0",
+    "vite": "^6.0.1",
+    "vite-tsconfig-paths": "^5.1.3"
+  },
+  "dependencies": {}
+}
