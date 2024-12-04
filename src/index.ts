@@ -340,7 +340,7 @@ class PrintHub {
     onReady,
     onFailed,
   }: {
-    onReady: (hub: PrintHub) => void;
+    onReady: (printer: PrintHub) => void;
     onFailed: (message: string) => void;
   }) {
     try {
