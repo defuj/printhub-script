@@ -147,14 +147,31 @@
         </div>
 
         <div class="flex flex-col space-y-2 mt-4 w-[80mm]">
-            <button id="connectToBluetoothPrinter"
-                class="px-4 py-2 text-white bg-gray-400 rounded-lg">Print with
-                Bluetooth
-                Printer</button>
+            <!-- select printer type -->
+            <div class="flex flex-col">
+                <label for="printerType">Select Printer Type:</label>
+                <select id="printerType"
+                    class="px-4 py-3 bg-gray-200 rounded-lg text-gray-600">
+                    <option value="bluetooth" selected>Bluetooth
+                        Printer</option>
+                    <option value="usb">USB Printer</option>
+                </select>
+            </div>
+            <!-- select paper size -->
+            <div class="flex flex-col">
+                <label for="paperSize">
+                    Select Paper Size:
+                </label>
+                <select id="paperSize"
+                    class="px-4 py-3 bg-gray-200 rounded-lg text-gray-600">
+                    <option value="58" selected>58mm</option>
+                    <option value="80">80mm</option>
+                </select>
+            </div>
 
-            <button id="connectToUsbPrinter"
+            <button id="connectToPrinter"
                 class="px-4 py-2 text-white bg-gray-600 rounded-lg">Print with
-                USB Printer</button>
+                Bluetooth Printer</button>
         </div>
 
         <p id="status"></p>
@@ -163,6 +180,19 @@
             src="/dist/index.global.js" defer></script>
 
         <script defer>
+            let printerType = 'bluetooth';
+            let paperSize = '58';
+
+            document.getElementById('printerType').addEventListener('change', (e) => {
+                printerType = e.target.value;
+
+                document.getElementById('connectToPrinter').textContent = `Print with ${printerType === 'bluetooth' ? 'Bluetooth' : 'USB'} Printer`;
+            });
+
+            document.getElementById('paperSize').addEventListener('change', (e) => {
+                paperSize = e.target.value;
+            });
+
             async function startPrint(print) {
                 // Print Header
                 await print.writeText("SADIGIT", {
@@ -205,28 +235,16 @@
                 await print.writeLineBreak(3);
             }
 
-            document.getElementById('connectToBluetoothPrinter').addEventListener('click', () => {
+            document.getElementById('connectToPrinter').addEventListener('click', () => {
                 let printer = new PrintHub.init({
-                    paperSize: '58',
-                    printerType: 'bluetooth',
+                    paperSize: paperSize,
+                    printerType: printerType,
                 });
                 printer.connectToPrint({
                     onReady: (print) => startPrint(print),
                     onFailed: (message) => {
                         console.log(message);
-                    }
-                });
-            });
-
-            document.getElementById('connectToUsbPrinter').addEventListener('click', () => {
-                let printer = new PrintHub.init({
-                    paperSize: '58',
-                    printerType: 'usb',
-                });
-                printer.connectToPrint({
-                    onReady: (print) => startPrint(print),
-                    onFailed: (message) => {
-                        console.log(message);
+                        window.alert(message);
                     }
                 });
             });
