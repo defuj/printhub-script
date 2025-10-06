@@ -451,10 +451,25 @@ class PrintHub {
     return start + " ".repeat(totalChar - start.length - end.length) + end;
   }
 
-  private async printImageData(image: CanvasImageSource): Promise<void> {
+  private async printImageData(
+    image: CanvasImageSource,
+    align: string = "left"
+  ): Promise<void> {
     const device = this.printChar;
     if (!device) {
       throw new Error("Printer not connected");
+    }
+
+    if (align === "center") {
+      await (device as BluetoothRemoteGATTCharacteristic).writeValue(
+        this.center
+      );
+    } else if (align === "right") {
+      await (device as BluetoothRemoteGATTCharacteristic).writeValue(
+        this.right
+      );
+    } else {
+      await (device as BluetoothRemoteGATTCharacteristic).writeValue(this.left);
     }
 
     let imageData: Uint8ClampedArray;
@@ -511,7 +526,7 @@ class PrintHub {
     };
 
     const printData = getImagePrintData();
-    
+
     if (this.printerType === "bluetooth") {
       await this.sendImageDataBluetooth(printData);
     } else {
@@ -522,7 +537,7 @@ class PrintHub {
   private async sendImageDataBluetooth(data: Uint8Array): Promise<void> {
     const device = this.printChar as BluetoothRemoteGATTCharacteristic;
     let index = 0;
-    
+
     while (index < data.length) {
       const chunkSize = Math.min(512, data.length - index);
       const chunk = data.slice(index, index + chunkSize);
@@ -549,22 +564,24 @@ class PrintHub {
   async putImageWithUrl(
     url: string,
     options: {
+      align?: string;
       onFailed?: (message: string) => void;
     } = {}
   ): Promise<void> {
     const { onFailed } = options;
-    
+    const align = options.align || "left";
+
     try {
       const img = new Image();
       img.crossOrigin = "anonymous";
-      
+
       await new Promise<void>((resolve, reject) => {
         img.onload = () => resolve();
         img.onerror = () => reject(new Error("Failed to load image"));
         img.src = url;
       });
 
-      await this.printImageData(img);
+      await this.printImageData(img, align);
     } catch (error: any) {
       const errorMessage = error.message || "Failed to print image";
       if (onFailed) {
