@@ -9,17 +9,18 @@ PrintHub is a JavaScript plugin for printing text using a Bluetooth or USB therm
 
 ## Features
 
-1. Print text with various options like bold, underline, alignment, and text size.
-2. Print text in two columns.
-3. Print dashed lines.
-4. Print line breaks.
-5. Supports two paper sizes: "58mm" and "80mm".
-6. Supports connecting to Bluetooth thermal printers.
-7. Compatible with modern browsers such as Chrome, Firefox, and Edge.
-8. Node.js compatible.
-9. Supports usage via CDN.
-10. Supports usage via NPM.
-11. ES6 compatible.
+1. Print Image from URL with alignment option.
+2. Print text with various options like bold, underline, alignment, and text size.
+3. Print text in two columns.
+4. Print dashed lines.
+5. Print line breaks.
+6. Supports two paper sizes: "58mm" and "80mm".
+7. Supports connecting to Bluetooth thermal printers.
+8. Compatible with modern browsers such as Chrome, Firefox, and Edge.
+9. Node.js compatible.
+10. Supports usage via CDN.
+11. Supports usage via NPM.
+12. ES6 compatible.
 
 ## Installation
 
