@@ -88,6 +88,9 @@
         <div class="bg-white p-4 rounded shadow-md w-[80mm]">
             <!-- Print Header -->
             <div class="text-center">
+                <img class="mx-auto h-16"
+                    src="https://www.sadigit.co.id/wp-content/uploads/2021/10/cropped-sadigit-logo.png"
+                    alt="Logo">
                 <h1 class="text-xl font-bold">SADIGIT</h1>
                 <p>Jl. Kutamaya No.Ruko A, Kotakulon, Kec. Sumedang Sel.,
                     Kabupaten Sumedang, Jawa Barat 45311</p>
@@ -195,6 +198,10 @@
 
             async function startPrint(print) {
                 // Print Header
+                await print.putImageWithUrl(
+                    "https://www.sadigit.co.id/wp-content/uploads/2021/10/cropped-sadigit-logo.png",
+                    { align: "center" }
+                );
                 await print.writeText("SADIGIT", {
                     align: "center",
                     bold: true,
@@ -233,6 +240,14 @@
                     { align: "center" }
                 );
                 await print.writeLineBreak(3);
+            }
+
+            async function printImage(print) {
+                await print.putImageWithUrl(
+                    "https://cdn-icons-png.flaticon.com/256/2504/2504739.png",
+                {
+                    align: "center",
+                });
             }
 
             document.getElementById('connectToPrinter').addEventListener('click', () => {
