@@ -1082,17 +1082,21 @@ class PrintHub {
     const {
       format = "CODE128",
       width = 2,
-      height = 50,
+      height = 60,
       displayValue = true,
       align = "center",
       onFailed
     } = options;
 
     try {
-      // Create canvas for barcode
+      // Hitung lebar optimal berdasarkan paper size
+      // 58mm = ~384 pixels, 80mm = ~576 pixels di 203 DPI
+      const maxWidth = this.paperSize === "58" ? 380 : 570;
+      
+      // Create canvas for barcode dengan ukuran yang lebih besar
       const canvas = document.createElement("canvas");
       
-      // Generate barcode
+      // Generate barcode dengan ukuran penuh
       JsBarcode(canvas, text, {
         format: format,
         width: width,
@@ -1100,11 +1104,28 @@ class PrintHub {
         displayValue: displayValue,
         margin: 10,
         background: "#ffffff",
-        lineColor: "#000000"
+        lineColor: "#000000",
+        fontSize: 14,
+        textMargin: 5
       });
 
-      // Print barcode dari canvas
-      await this.printImageData(canvas, align);
+      // Pastikan barcode tidak melebihi lebar maksimal
+      if (canvas.width > maxWidth) {
+        // Scale down jika terlalu lebar
+        const scale = maxWidth / canvas.width;
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = maxWidth;
+        tempCanvas.height = canvas.height * scale;
+        const tempCtx = tempCanvas.getContext("2d");
+        if (tempCtx) {
+          tempCtx.drawImage(canvas, 0, 0, tempCanvas.width, tempCanvas.height);
+          // Print barcode dari scaled canvas
+          await this.printBarcodeImage(tempCanvas, align);
+        }
+      } else {
+        // Print barcode dengan ukuran original
+        await this.printBarcodeImage(canvas, align);
+      }
 
     } catch (error: any) {
       const errorMessage = error.message || "Failed to generate or print Barcode";
@@ -1114,6 +1135,94 @@ class PrintHub {
         throw new Error(errorMessage);
       }
     }
+  }
+
+  /**
+   * Method khusus untuk print barcode image
+   * Tidak resize seperti printImageData, maintain aspect ratio
+   * 
+   * @private
+   * @param {HTMLCanvasElement} canvas - Canvas yang berisi barcode
+   * @param {string} align - Alignment: "left", "center", "right"
+   */
+  private async printBarcodeImage(
+    canvas: HTMLCanvasElement,
+    align: string = "center"
+  ): Promise<void> {
+    const device = this.printChar;
+    if (!device) {
+      throw new Error("Printer not connected");
+    }
+
+    // Set alignment
+    if (align === "center") {
+      await (device as BluetoothRemoteGATTCharacteristic).writeValue(
+        this.center.buffer as ArrayBuffer
+      );
+    } else if (align === "right") {
+      await (device as BluetoothRemoteGATTCharacteristic).writeValue(
+        this.right.buffer as ArrayBuffer
+      );
+    } else {
+      await (device as BluetoothRemoteGATTCharacteristic).writeValue(
+        this.left.buffer as ArrayBuffer
+      );
+    }
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Failed to get canvas context");
+    }
+
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    
+    // Convert ke monochrome
+    const threshold = 128;
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // ESC/POS image commands
+    const widthBytes = Math.ceil(width / 8);
+    const header = new Uint8Array([
+      0x1d, 0x76, 0x30, 0x00, // GS v 0
+      widthBytes & 0xff, (widthBytes >> 8) & 0xff, // width in bytes
+      height & 0xff, (height >> 8) & 0xff // height
+    ]);
+
+    // Convert image to bitmap
+    const bitmap = new Uint8Array(widthBytes * height);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const pixelIndex = (y * width + x) * 4;
+        const r = imageData[pixelIndex];
+        const g = imageData[pixelIndex + 1];
+        const b = imageData[pixelIndex + 2];
+        const gray = (r + g + b) / 3;
+        
+        if (gray < threshold) {
+          const byteIndex = y * widthBytes + Math.floor(x / 8);
+          const bitIndex = 7 - (x % 8);
+          bitmap[byteIndex] |= 1 << bitIndex;
+        }
+      }
+    }
+
+    // Combine header and bitmap
+    const fullData = new Uint8Array(header.length + bitmap.length);
+    fullData.set(header, 0);
+    fullData.set(bitmap, header.length);
+
+    // Send to printer
+    if (this.printerType === "usb") {
+      await this.sendImageDataUsb(fullData);
+    } else {
+      await this.sendImageDataBluetooth(fullData);
+    }
+
+    // Reset alignment
+    await (device as BluetoothRemoteGATTCharacteristic).writeValue(
+      this.left.buffer as ArrayBuffer
+    );
   }
 }
 
