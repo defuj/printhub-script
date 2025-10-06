@@ -6,6 +6,9 @@
 - ✅ **Method `printBarcode()` added** to `src/index.ts`
 - ✅ Import JsBarcode library
 - ✅ Complete JSDoc documentation
+- ✅ **v1.2.1**: Added dedicated `printBarcodeImage()` method
+- ✅ **v1.2.1**: Paper size aware (58mm: 380px, 80mm: 570px)
+- ✅ **v1.2.1**: Smart scaling to prevent overflow
 - ✅ Support untuk 9 format barcode:
   - CODE128 (default)
   - CODE39
@@ -19,25 +22,62 @@
 
 ### 2. Features
 - ✅ Customizable width (1-4)
-- ✅ Customizable height (pixels)
+- ✅ Customizable height (pixels, default: 60px)
 - ✅ Display value option (show/hide text)
 - ✅ Alignment support (left/center/right)
 - ✅ Error handling dengan callback
 - ✅ Support untuk Bluetooth & USB printers
+- ✅ **v1.2.1**: Full width printing based on paper size
+- ✅ **v1.2.1**: Proper aspect ratio maintenance
+- ✅ **v1.2.1**: Enhanced barcode quality for scanning
 
 ### 3. Documentation
 - ✅ Complete JSDoc dengan 5 contoh penggunaan
 - ✅ Test file created: `test-barcode.html`
 - ✅ Real-world example: Invoice dengan barcode
+- ✅ **v1.2.1**: Updated README.md with quality improvements
 
 ### 4. Dependencies
 - ✅ jsbarcode@3.12.1 installed
 - ✅ @types/jsbarcode@3.11.4 installed
 - ✅ Added to package.json dependencies
 
-## ⚠️ PENDING
+## 🔧 v1.2.1 QUALITY FIXES
 
-### Build Issues
+### Issues Fixed
+- ❌ **Before**: Barcode printed as square box (120x120px)
+- ✅ **After**: Barcode prints in full width with proper aspect ratio
+
+### Improvements
+1. **Paper Size Awareness**
+   - 58mm paper: Up to 380 pixels wide
+   - 80mm paper: Up to 570 pixels wide
+   - Auto-adjusts based on `paperSize` setting
+
+2. **Dedicated Barcode Rendering**
+   - New `printBarcodeImage()` method
+   - No forced resize like `printImageData()`
+   - Maintains aspect ratio
+   - Higher quality ESC/POS commands
+
+3. **Enhanced Quality**
+   - Default height: 50px → 60px
+   - Improved font size: 14px
+   - Better text margin: 5px
+   - Optimal margin: 10px
+
+4. **Smart Scaling**
+   - Checks canvas width vs max width
+   - Scales down only if necessary
+   - Preserves aspect ratio when scaling
+
+### Technical Details
+- File: `src/index.ts`
+- Lines: 1256 (+127 lines from v1.2.0)
+- New method: `printBarcodeImage()` (~80 lines)
+- TypeScript errors: 0
+
+## ⚠️ PREVIOUS ISSUES (RESOLVED in v1.2.1)
 - ❌ tsup build command not executing (npm/environment issue)
 - ⏳ dist files need to be rebuilt to include barcode feature
 - ⏳ Type definitions need regeneration

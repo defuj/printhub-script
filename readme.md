@@ -54,7 +54,7 @@ const PrintHub = require("printhub");
 Or use specific version:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/printhub@1.2.0/dist/index.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/printhub@1.2.1/dist/index.global.js"></script>
 ```
 
 ## Usage
@@ -373,6 +373,8 @@ printer.connectToPrint({
 13. **Print Barcode** 🆕
 
     Print barcodes in various formats for products, invoices, tickets, and inventory management.
+    
+    **✨ v1.2.1 Improvements**: Barcode now prints in full width with proper aspect ratio and is scannable!
 
     ```javascript
     printer.connectToPrint({
@@ -384,7 +386,7 @@ printer.connectToPrint({
         await print.printBarcode("5901234123457", {
           format: "EAN13",      // Barcode format
           width: 2,             // Line width (1-4)
-          height: 60,           // Height in pixels
+          height: 60,           // Height in pixels (default: 60)
           displayValue: true,   // Show text below barcode
           align: "center"       // Alignment
         });
@@ -562,9 +564,13 @@ PrintHub is perfect for various business needs:
 - Use **CODE39** for simple alphanumeric needs
 - Set `displayValue: true` to show the barcode text
 - Use **center alignment** for better scanning
-- Recommended height: 50-60 pixels for good readability
+- Recommended height: 60-80 pixels for good readability (default is 60px)
 - Keep width at 2 for standard printers
 - Ensure good contrast (dark barcode on light background)
+- **New in v1.2.1**: Barcode automatically adjusts to paper size
+  - 58mm paper: Up to 380 pixels wide
+  - 80mm paper: Up to 570 pixels wide
+- Barcode maintains proper aspect ratio for accurate scanning
 
 ### For Images
 - Use high contrast images (black & white works best)
@@ -634,7 +640,18 @@ PrintHub is perfect for various business needs:
 
 ## Change Log
 
-### v1.2.0 🆕
+### v1.2.1 🔧
+
+- **BUGFIX**: Fixed barcode printing quality issues
+- Barcode now prints in full width based on paper size (58mm: 380px, 80mm: 570px)
+- Fixed aspect ratio distortion - barcode no longer prints as square box
+- Improved barcode rendering quality with dedicated `printBarcodeImage()` method
+- Increased default barcode height from 50px to 60px for better readability
+- Barcode now scannable with standard barcode scanners
+- Added smart scaling to prevent barcode from exceeding paper width
+- Optimized ESC/POS image commands for better print quality
+
+### v1.2.0
 
 - **NEW FEATURE**: `printBarcode()` - Generate and print barcodes in 9 different formats
 - Support for CODE128, CODE39, EAN13, EAN8, UPC, ITF14, MSI, pharmacode, and codabar
