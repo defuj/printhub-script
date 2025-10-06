@@ -44,7 +44,7 @@ const PrintHub = require("printhub");
 ### Using CDN
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/printhub@1.0.14/dist/index.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/printhub@1.0.15/dist/index.global.js"></script>
 ```
 
 ## Usage
@@ -266,6 +266,21 @@ printer.connectToPrint({
     });
     ```
 
+11. Print an image from a URL.
+
+    ```javascript
+    printer.connectToPrint({
+      onReady: async (print) => {
+        await print.putImageWithUrl("https://example.com/image.png", {
+          align: "center",
+        });
+      },
+      onFailed: (message) => {
+        console.log(message);
+      },
+    });
+    ```
+
 ### API
 
 | Method                                        | Description                                                             |
@@ -275,6 +290,7 @@ printer.connectToPrint({
 | `writeTextWith2Column(text1, text2, options)` | Writes text in two columns.                                             |
 | `writeText(text, options)`                    | Writes text.                                                            |
 | `connectToPrint({ onReady, onFailed })`       | Connects to the printer and calls the `onReady` or `onFailed` callback. |
+| `putImageWithUrl(url, options)`               | Prints an image from a URL.                                             |
 
 ### Options for `writeText` and `writeTextWith2Column` Methods
 
@@ -339,6 +355,13 @@ printer.connectToPrint({
 | WebView | No      | ❌     |
 
 ## Change Log
+
+### v1.0.15
+
+- Now supports to print image from URL (`putImageWithUrl`) with alignment option
+- Refactor printing methods for USB and Bluetooth
+- Improve error handling and add image printing functionality
+- Fix minor bugs
 
 ### v1.0.14
 
