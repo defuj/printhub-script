@@ -53,95 +53,128 @@ class PrintHub {
 
   async setDefault(charp: BluetoothRemoteGATTCharacteristic) {
     if (charp) {
-      await charp.writeValue(this.left.buffer);
-      await charp.writeValue(this.normalSize.buffer);
-      await charp.writeValue(this.boldOff.buffer);
-      await charp.writeValue(this.underlineOff.buffer);
+      await charp.writeValue(this.left);
+      await charp.writeValue(this.normalSize);
+      await charp.writeValue(this.boldOff);
+      await charp.writeValue(this.underlineOff);
     }
   }
 
   async writeLineBreak({ count = 1 }: { count?: number } = {}) {
-    if (this.printChar) {
-      if (this.printerType === "usb") {
-        for (let i = 0; i < count; i++) {
-          const textData = [0x0a];
-          try {
-            const usbConfig = (this.printChar as USBDevice).configuration;
-            if (usbConfig) {
-              const usbEndPoints =
-                usbConfig.interfaces[0].alternate.endpoints.find(
-                  (endpoint) => endpoint.direction === "out"
-                );
-              if (usbEndPoints) {
-                await (this.printChar as USBDevice).transferOut(
-                  usbEndPoints.endpointNumber,
-                  new Uint8Array(textData)
-                );
-                console.log("Data sent to USB printer.");
-              } else {
-                throw new Error("No suitable endpoint found for USB printing.");
-              }
-            } else {
-              throw new Error(
-                "No suitable configuration found for USB printing."
-              );
-            }
-          } catch (error) {
-            throw new Error("Failed to print via USB");
-          }
+    if (!this.printChar) return;
+    if (this.printerType === "usb") {
+      await this.writeUsbLineBreak(count);
+    } else {
+      await this.writeBluetoothLineBreak(count);
+    }
+  }
+
+  private async writeUsbLineBreak(count: number) {
+    const textData = [0x0a];
+    const device = this.printChar as USBDevice;
+    for (let i = 0; i < count; i++) {
+      try {
+        const usbConfig = device.configuration;
+        if (!usbConfig) {
+          throw new Error("No suitable configuration found for USB printing.");
         }
-      } else {
-        for (let i = 0; i < count; i++) {
-          await (
-            this.printChar as BluetoothRemoteGATTCharacteristic
-          ).writeValue(new Uint8Array([10]).buffer);
+        const usbEndPoints = usbConfig.interfaces[0].alternate.endpoints.find(
+          (endpoint) => endpoint.direction === "out"
+        );
+        if (!usbEndPoints) {
+          throw new Error("No suitable endpoint found for USB printing.");
         }
+        await device.transferOut(
+          usbEndPoints.endpointNumber,
+          new Uint8Array(textData)
+        );
+      } catch {
+        throw new Error("Failed to print via USB");
       }
     }
   }
 
+  private async writeBluetoothLineBreak(count: number) {
+    const device = this.printChar as BluetoothRemoteGATTCharacteristic;
+    for (let i = 0; i < count; i++) {
+      await device.writeValue(new Uint8Array([10]).buffer);
+    }
+  }
+
   async writeDashLine() {
-    if (this.printChar) {
-      if (this.printerType === "usb") {
-        const textData = [
-          ...this.encoder.encode("-".repeat(this.paperSize === "58" ? 32 : 42)),
-        ];
-        try {
-          const usbConfig = (this.printChar as USBDevice).configuration;
-          if (usbConfig) {
-            const usbEndPoints =
-              usbConfig.interfaces[0].alternate.endpoints.find(
-                (endpoint) => endpoint.direction === "out"
-              );
-            if (usbEndPoints) {
-              await (this.printChar as USBDevice).transferOut(
-                usbEndPoints.endpointNumber,
-                new Uint8Array(textData)
-              );
-              console.log("Data sent to USB printer.");
-            } else {
-              throw new Error("No suitable endpoint found for USB printing.");
-            }
-          } else {
-            throw new Error(
-              "No suitable configuration found for USB printing."
-            );
-          }
-        } catch (error) {
-          throw new Error("Failed to print via USB");
-        }
-      } else {
-        await (this.printChar as BluetoothRemoteGATTCharacteristic).writeValue(
-          this.encoder.encode("-".repeat(this.paperSize === "58" ? 32 : 42))
-        );
+    if (!this.printChar) return;
+    const dashLine = "-".repeat(this.paperSize === "58" ? 32 : 42);
+    if (this.printerType === "usb") {
+      await this.printUsbText(dashLine);
+    } else {
+      await (this.printChar as BluetoothRemoteGATTCharacteristic).writeValue(
+        this.encoder.encode(dashLine)
+      );
+    }
+    await this.writeLineBreak();
+  }
+
+  private async printUsbText(text: string) {
+    const textData = [...this.encoder.encode(text)];
+    try {
+      const usbConfig = (this.printChar as USBDevice).configuration;
+      if (!usbConfig) {
+        throw new Error("No suitable configuration found for USB printing.");
       }
-      await this.writeLineBreak();
+      const usbEndPoints = usbConfig.interfaces[0].alternate.endpoints.find(
+        (endpoint) => endpoint.direction === "out"
+      );
+      if (!usbEndPoints) {
+        throw new Error("No suitable endpoint found for USB printing.");
+      }
+      await (this.printChar as USBDevice).transferOut(
+        usbEndPoints.endpointNumber,
+        new Uint8Array(textData)
+      );
+    } catch {
+      throw new Error("Failed to print via USB");
     }
   }
 
   async writeTextWith2Column(
     text1: string,
     text2: string,
+    options: {
+      bold?: boolean;
+      underline?: boolean;
+      align?: string;
+      size?: string;
+    } = {}
+  ) {
+    const device = this.printChar;
+    if (!device) return;
+
+    const {
+      bold = false,
+      underline = false,
+      align = "left",
+      size = "normal",
+    } = options;
+    const formattedText = this.createItemData(text1, text2);
+
+    if (this.printerType === "usb") {
+      await this.writeUsbTextWith2Column(formattedText, {
+        bold,
+        underline,
+        align,
+        size,
+      });
+    } else {
+      await this.writeBluetoothTextWith2Column(
+        formattedText,
+        { bold, underline, align, size },
+        device as BluetoothRemoteGATTCharacteristic
+      );
+    }
+  }
+
+  private async writeUsbTextWith2Column(
+    text: string,
     {
       bold = false,
       underline = false,
@@ -152,88 +185,74 @@ class PrintHub {
       underline?: boolean;
       align?: string;
       size?: string;
-    } = {}
-  ) {
-    const device = this.printChar;
-    if (device) {
-      if (this.printerType === "usb") {
-        const textData = [
-          0x1b,
-          0x21,
-          bold ? 0x8 : 0x0,
-          0x1b,
-          0x2d,
-          underline ? 0x1 : 0x0, // Set underline
-          0x1b,
-          0x61, // Alignment
-          align === "center" ? 0x1 : align === "right" ? 0x2 : 0x0,
-          0x1d,
-          0x21,
-          size === "double" ? 0x11 : 0x0, // Set size
-          ...this.encoder.encode(this.createItemData(text1, text2)), // Add text data
-          0x0a, // Line feed
-        ];
-
-        try {
-          const usbConfig = (device as USBDevice).configuration;
-          if (usbConfig) {
-            const usbEndPoints =
-              usbConfig.interfaces[0].alternate.endpoints.find(
-                (endpoint) => endpoint.direction === "out"
-              );
-            if (usbEndPoints) {
-              await (device as USBDevice).transferOut(
-                usbEndPoints.endpointNumber,
-                new Uint8Array(textData)
-              );
-              console.log("Data sent to USB printer.");
-            } else {
-              throw new Error("No suitable endpoint found for USB printing.");
-            }
-          } else {
-            throw new Error(
-              "No suitable configuration found for USB printing."
-            );
-          }
-        } catch (error) {
-          throw new Error("Failed to print via USB");
-        }
-      } else {
-        if (bold) {
-          await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.boldOn.buffer
-          );
-        }
-
-        if (underline) {
-          await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.underlineOn.buffer
-          );
-        }
-
-        if (align === "center") {
-          await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.center.buffer
-          );
-        } else if (align === "right") {
-          await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.right.buffer
-          );
-        }
-
-        if (size === "double") {
-          await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.doubleSize.buffer
-          );
-        }
-
-        await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-          this.encoder.encode(this.createItemData(text1, text2))
-        );
-        await this.setDefault(device as BluetoothRemoteGATTCharacteristic);
-        await this.writeLineBreak();
-      }
     }
+  ) {
+    const device = this.printChar as USBDevice;
+    const alignValue = align === "center" ? 0x1 : align === "right" ? 0x2 : 0x0;
+    const textData = [
+      0x1b,
+      0x21,
+      bold ? 0x8 : 0x0,
+      0x1b,
+      0x2d,
+      underline ? 0x1 : 0x0,
+      0x1b,
+      0x61,
+      alignValue,
+      0x1d,
+      0x21,
+      size === "double" ? 0x11 : 0x0,
+      ...this.encoder.encode(text),
+      0x0a,
+    ];
+
+    try {
+      const usbConfig = device.configuration;
+      if (!usbConfig)
+        throw new Error("No suitable configuration found for USB printing.");
+      const usbEndPoints = usbConfig.interfaces[0].alternate.endpoints.find(
+        (endpoint) => endpoint.direction === "out"
+      );
+      if (!usbEndPoints)
+        throw new Error("No suitable endpoint found for USB printing.");
+      await device.transferOut(
+        usbEndPoints.endpointNumber,
+        new Uint8Array(textData)
+      );
+    } catch {
+      throw new Error("Failed to print via USB");
+    }
+  }
+
+  private async writeBluetoothTextWith2Column(
+    text: string,
+    {
+      bold = false,
+      underline = false,
+      align = "left",
+      size = "normal",
+    }: {
+      bold?: boolean;
+      underline?: boolean;
+      align?: string;
+      size?: string;
+    },
+    device: BluetoothRemoteGATTCharacteristic
+  ) {
+    if (bold) await device.writeValue(this.boldOn);
+    if (underline) await device.writeValue(this.underlineOn);
+
+    if (align === "center") {
+      await device.writeValue(this.center);
+    } else if (align === "right") {
+      await device.writeValue(this.right);
+    }
+
+    if (size === "double") await device.writeValue(this.doubleSize);
+
+    await device.writeValue(this.encoder.encode(text));
+    await this.setDefault(device);
+    await this.writeLineBreak();
   }
 
   async writeText(
@@ -282,7 +301,6 @@ class PrintHub {
                 usbEndPoints.endpointNumber,
                 new Uint8Array(textData)
               );
-              console.log("Data sent to USB printer.");
             } else {
               throw new Error("No suitable endpoint found for USB printing.");
             }
@@ -297,33 +315,33 @@ class PrintHub {
       } else {
         if (bold) {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.boldOn.buffer
+            this.boldOn
           );
         }
 
         if (underline) {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.underlineOn.buffer
+            this.underlineOn
           );
         }
 
         if (align === "center") {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.center.buffer
+            this.center
           );
         } else if (align === "right") {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.right.buffer
+            this.right
           );
         } else {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.left.buffer
+            this.left
           );
         }
 
         if (size === "double") {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.doubleSize.buffer
+            this.doubleSize
           );
         }
 
@@ -345,76 +363,75 @@ class PrintHub {
   }) {
     try {
       if (this.printerType === "usb") {
-        await navigator.usb
-          .requestDevice({ filters: [] })
-          .then(async (device) => {
-            await device.open();
-            await device.selectConfiguration(1);
-            await device.claimInterface(0);
-            this.printChar = device;
-            onReady(this);
-          })
-          .catch((error) => {
-            onFailed(error.message);
-          });
+        await this.connectUsbPrinter(onReady, onFailed);
       } else if (this.printerType === "bluetooth") {
-        if (await this.checkBluetooth()) {
-          if (this.printChar == null) {
-            navigator.bluetooth
-              .requestDevice({
-                filters: [
-                  {
-                    services: ["000018f0-0000-1000-8000-00805f9b34fb"],
-                  },
-                ],
-              })
-              .then((device) => {
-                if (device.gatt) {
-                  return device.gatt.connect();
-                } else {
-                  throw new Error("Device not found");
-                }
-              })
-              .then((server) => {
-                return server.getPrimaryService(
-                  "000018f0-0000-1000-8000-00805f9b34fb"
-                );
-              })
-              .then((service) => {
-                return service.getCharacteristics();
-              })
-              .then((characteristics) => {
-                let writableCharacteristic: BluetoothRemoteGATTCharacteristic | null =
-                  null;
-                characteristics.forEach((characteristic) => {
-                  console.log("Characteristic UUID: " + characteristic.uuid);
-                  if (characteristic.properties.write) {
-                    writableCharacteristic = characteristic;
-                    this.printChar = writableCharacteristic;
-                  }
-                });
-                if (writableCharacteristic) {
-                  onReady(this);
-                } else {
-                  onFailed("No writable characteristic found.");
-                }
-              })
-              .catch((error) => {
-                onFailed(error.message);
-              });
-          } else {
-            onReady(this);
-          }
-        } else {
-          onFailed(
-            "Perangkat Anda tidak mendukung untuk melakukan print dengan Bluetooth"
-          );
-        }
+        await this.connectBluetoothPrinter(onReady, onFailed);
       } else {
         onFailed("Printer type not supported.");
       }
     } catch (error) {
       onFailed("Failed to connect to printer");
+    }
+  }
+
+  private async connectUsbPrinter(
+    onReady: (printer: PrintHub) => void,
+    onFailed: (message: string) => void
+  ) {
+    try {
+      const device = await navigator.usb.requestDevice({ filters: [] });
+      await device.open();
+      await device.selectConfiguration(1);
+      await device.claimInterface(0);
+      this.printChar = device;
+      onReady(this);
+    } catch (error: any) {
+      onFailed(error.message || "Failed to connect to USB printer.");
+    }
+  }
+
+  private async connectBluetoothPrinter(
+    onReady: (printer: PrintHub) => void,
+    onFailed: (message: string) => void
+  ) {
+    try {
+      if (!(await this.checkBluetooth())) {
+        onFailed(
+          "Perangkat Anda tidak mendukung untuk melakukan print dengan Bluetooth"
+        );
+        return;
+      }
+      if (this.printChar != null) {
+        onReady(this);
+        return;
+      }
+      const device = await navigator.bluetooth.requestDevice({
+        filters: [
+          {
+            services: ["000018f0-0000-1000-8000-00805f9b34fb"],
+          },
+        ],
+      });
+      if (!device.gatt) {
+        onFailed("Device not found");
+        return;
+      }
+      const server = await device.gatt.connect();
+      const service = await server.getPrimaryService(
+        "000018f0-0000-1000-8000-00805f9b34fb"
+      );
+      const characteristics = await service.getCharacteristics();
+      const writableCharacteristic = characteristics.find(
+        (characteristic) => characteristic.properties.write
+      );
+      if (writableCharacteristic) {
+        this.printChar = writableCharacteristic;
+        onReady(this);
+      } else {
+        onFailed("No writable characteristic found.");
+      }
+    } catch (error: any) {
+      onFailed(error.message || "Failed to connect to Bluetooth printer.");
     }
   }
 
@@ -432,6 +449,130 @@ class PrintHub {
     }
 
     return start + " ".repeat(totalChar - start.length - end.length) + end;
+  }
+
+  private async printImageData(image: CanvasImageSource): Promise<void> {
+    const device = this.printChar;
+    if (!device) {
+      throw new Error("Printer not connected");
+    }
+
+    let imageData: Uint8ClampedArray;
+    const canvas = document.createElement("canvas");
+    canvas.width = 120;
+    canvas.height = 120;
+    const context = canvas.getContext("2d");
+
+    if (context && image) {
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      imageData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    } else {
+      throw new Error("Failed to process image");
+    }
+
+    const getDarkPixel = (x: number, y: number): number => {
+      const red = imageData[(canvas.width * y + x) * 4];
+      const green = imageData[(canvas.width * y + x) * 4 + 1];
+      const blue = imageData[(canvas.width * y + x) * 4 + 2];
+      return red + green + blue > 0 ? 1 : 0;
+    };
+
+    const getImagePrintData = (): Uint8Array => {
+      if (!imageData) {
+        console.log("No image to print!");
+        return new Uint8Array([]);
+      }
+      const printData = new Uint8Array((canvas.width / 8) * canvas.height + 8);
+      let offset = 0;
+      printData[0] = 29;
+      printData[1] = 118;
+      printData[2] = 48;
+      printData[3] = 0;
+      printData[4] = canvas.width / 8;
+      printData[5] = 0;
+      printData[6] = canvas.height % 256;
+      printData[7] = canvas.height / 256;
+      offset = 7;
+      for (let i = 0; i < canvas.height; ++i) {
+        for (let k = 0; k < canvas.width / 8; ++k) {
+          const k8 = k * 8;
+          printData[++offset] =
+            getDarkPixel(k8 + 0, i) * 128 +
+            getDarkPixel(k8 + 1, i) * 64 +
+            getDarkPixel(k8 + 2, i) * 32 +
+            getDarkPixel(k8 + 3, i) * 16 +
+            getDarkPixel(k8 + 4, i) * 8 +
+            getDarkPixel(k8 + 5, i) * 4 +
+            getDarkPixel(k8 + 6, i) * 2 +
+            getDarkPixel(k8 + 7, i);
+        }
+      }
+      return printData;
+    };
+
+    const printData = getImagePrintData();
+    
+    if (this.printerType === "bluetooth") {
+      await this.sendImageDataBluetooth(printData);
+    } else {
+      await this.sendImageDataUsb(printData);
+    }
+  }
+
+  private async sendImageDataBluetooth(data: Uint8Array): Promise<void> {
+    const device = this.printChar as BluetoothRemoteGATTCharacteristic;
+    let index = 0;
+    
+    while (index < data.length) {
+      const chunkSize = Math.min(512, data.length - index);
+      const chunk = data.slice(index, index + chunkSize);
+      await device.writeValue(chunk);
+      index += chunkSize;
+    }
+  }
+
+  private async sendImageDataUsb(data: Uint8Array): Promise<void> {
+    const device = this.printChar as USBDevice;
+    const usbConfig = device.configuration;
+    if (!usbConfig) {
+      throw new Error("No suitable configuration found for USB printing.");
+    }
+    const usbEndPoint = usbConfig.interfaces[0].alternate.endpoints.find(
+      (endpoint) => endpoint.direction === "out"
+    );
+    if (!usbEndPoint) {
+      throw new Error("No suitable endpoint found for USB printing.");
+    }
+    await device.transferOut(usbEndPoint.endpointNumber, data);
+  }
+
+  async putImageWithUrl(
+    url: string,
+    options: {
+      onFailed?: (message: string) => void;
+    } = {}
+  ): Promise<void> {
+    const { onFailed } = options;
+    
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("Failed to load image"));
+        img.src = url;
+      });
+
+      await this.printImageData(img);
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to print image";
+      if (onFailed) {
+        onFailed(errorMessage);
+      } else {
+        throw new Error(errorMessage);
+      }
+    }
   }
 }
 
