@@ -1,3 +1,5 @@
+import QRCode from "qrcode";
+
 /**
  * PrintHub - Library untuk mencetak ke thermal printer via Bluetooth atau USB
  * 
@@ -882,6 +884,112 @@ class PrintHub {
       await this.printImageData(img, align);
     } catch (error: any) {
       const errorMessage = error.message || "Failed to print image";
+      if (onFailed) {
+        onFailed(errorMessage);
+      } else {
+        throw new Error(errorMessage);
+      }
+    }
+  }
+
+  /**
+   * Mencetak QR Code dari text/data
+   * QR Code berguna untuk payment (QRIS), URL, tracking, dll
+   * 
+   * @param {string} text - Text/data untuk di-encode ke QR Code
+   * @param {Object} [options] - Opsi untuk QR Code
+   * @param {string} [options.size="medium"] - Ukuran QR: "small" (100px), "medium" (200px), "large" (300px)
+   * @param {string} [options.align="center"] - Alignment: "left", "center", "right"
+   * @param {string} [options.errorCorrection="M"] - Error correction level: "L", "M", "Q", "H"
+   * @param {Function} [options.onFailed] - Callback jika gagal
+   * 
+   * @example
+   * // QR Code sederhana untuk URL
+   * await print.printQRCode("https://example.com");
+   * 
+   * @example
+   * // QR Code untuk QRIS Payment
+   * await print.printQRCode(qrisData, {
+   *   size: "large",
+   *   align: "center",
+   *   errorCorrection: "M"
+   * });
+   * 
+   * @example
+   * // QR Code dengan error handling
+   * await print.printQRCode("ORDER-12345", {
+   *   size: "medium",
+   *   align: "center",
+   *   onFailed: (message) => {
+   *     console.error("Gagal cetak QR:", message);
+   *     alert(message);
+   *   }
+   * });
+   * 
+   * @example
+   * // Contoh lengkap: Struk dengan QR Payment
+   * printer.connectToPrint({
+   *   onReady: async (print) => {
+   *     await print.writeText("TOKO SAYA", { align: "center", bold: true });
+   *     await print.writeDashLine();
+   *     await print.writeTextWith2Column("Total", "Rp 50.000");
+   *     await print.writeDashLine();
+   *     
+   *     // QR untuk payment
+   *     await print.writeText("SCAN UNTUK BAYAR", { align: "center", bold: true });
+   *     await print.writeLineBreak();
+   *     await print.printQRCode(qrisData, {
+   *       size: "large",
+   *       align: "center"
+   *     });
+   *     
+   *     await print.writeLineBreak({ count: 3 });
+   *   },
+   *   onFailed: (message) => alert(message)
+   * });
+   */
+  async printQRCode(
+    text: string,
+    options: {
+      size?: "small" | "medium" | "large";
+      align?: string;
+      errorCorrection?: "L" | "M" | "Q" | "H";
+      onFailed?: (message: string) => void;
+    } = {}
+  ): Promise<void> {
+    const { 
+      size = "medium", 
+      align = "center",
+      errorCorrection = "M",
+      onFailed 
+    } = options;
+
+    try {
+      // Tentukan ukuran dalam pixel
+      const sizeMap = {
+        small: 100,
+        medium: 200,
+        large: 300
+      };
+      const qrSize = sizeMap[size];
+
+      // Generate QR Code ke canvas
+      const canvas = document.createElement("canvas");
+      await QRCode.toCanvas(canvas, text, {
+        width: qrSize,
+        margin: 1,
+        errorCorrectionLevel: errorCorrection,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF"
+        }
+      });
+
+      // Print QR Code dari canvas
+      await this.printImageData(canvas, align);
+
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to generate or print QR Code";
       if (onFailed) {
         onFailed(errorMessage);
       } else {

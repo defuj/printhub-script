@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test QR Code - PrintHub</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test PrintHub QR Code Feature</h1>
+    
+    <div>
+        <h2>Paper Size:</h2>
+        <select id="paperSize">
+            <option value="58">58mm</option>
+            <option value="80">80mm</option>
+        </select>
+    </div>
+
+    <div>
+        <h2>Printer Type:</h2>
+        <select id="printerType">
+            <option value="bluetooth">Bluetooth</option>
+            <option value="usb">USB</option>
+        </select>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <button onclick="testQRCode()">Test QR Code Print</button>
+        <button onclick="testBasicPrint()">Test Basic Print</button>
+    </div>
+
+    <div id="status"></div>
+
+    <script src="dist/index.global.js"></script>
+    <script>
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = type;
+            statusDiv.innerHTML = message;
+            console.log(`[${type}]`, message);
+        }
+
+        function testBasicPrint() {
+            showStatus('Testing basic print without QR Code...', 'info');
+            
+            const paperSize = document.getElementById('paperSize').value;
+            const printerType = document.getElementById('printerType').value;
+
+            try {
+                const printer = new PrintHub.init({
+                    paperSize: paperSize,
+                    printerType: printerType,
+                });
+
+                printer.connectToPrint({
+                    onReady: async (print) => {
+                        try {
+                            showStatus('Connected! Printing...', 'info');
+                            
+                            await print.writeText("TEST PRINT", { 
+                                align: "center", 
+                                bold: true 
+                            });
+                            await print.writeDashLine();
+                            await print.writeText("Basic print works!", { 
+                                align: "center" 
+                            });
+                            await print.writeLineBreak({ count: 3 });
+                            
+                            showStatus('✅ Basic print successful!', 'success');
+                        } catch (err) {
+                            showStatus('❌ Print error: ' + err.message, 'error');
+                        }
+                    },
+                    onFailed: (message) => {
+                        showStatus('❌ Connection failed: ' + message, 'error');
+                    }
+                });
+            } catch (err) {
+                showStatus('❌ Initialization error: ' + err.message, 'error');
+            }
+        }
+
+        function testQRCode() {
+            showStatus('Testing QR Code feature...', 'info');
+            
+            const paperSize = document.getElementById('paperSize').value;
+            const printerType = document.getElementById('printerType').value;
+
+            try {
+                const printer = new PrintHub.init({
+                    paperSize: paperSize,
+                    printerType: printerType,
+                });
+
+                showStatus('Printer initialized. Connecting...', 'info');
+
+                printer.connectToPrint({
+                    onReady: async (print) => {
+                        try {
+                            showStatus('Connected! Generating QR Code...', 'info');
+                            
+                            // Test Header
+                            await print.writeText("QR CODE TEST", { 
+                                align: "center", 
+                                bold: true,
+                                size: "double"
+                            });
+                            await print.writeDashLine();
+                            
+                            // Test QR Code
+                            await print.writeText("Scan this QR:", { 
+                                align: "center", 
+                                bold: true 
+                            });
+                            await print.writeLineBreak();
+                            
+                            showStatus('Printing QR Code...', 'info');
+                            
+                            await print.printQRCode("https://github.com/defuj/printhub", {
+                                size: "medium",
+                                align: "center",
+                                errorCorrection: "M",
+                                onFailed: (msg) => {
+                                    showStatus('❌ QR Code error: ' + msg, 'error');
+                                }
+                            });
+                            
+                            await print.writeLineBreak();
+                            await print.writeText("github.com/defuj/printhub", { 
+                                align: "center" 
+                            });
+                            await print.writeLineBreak({ count: 3 });
+                            
+                            showStatus('✅ QR Code printed successfully!', 'success');
+                        } catch (err) {
+                            showStatus('❌ Print error: ' + err.message, 'error');
+                            console.error('Full error:', err);
+                        }
+                    },
+                    onFailed: (message) => {
+                        showStatus('❌ Connection failed: ' + message, 'error');
+                    }
+                });
+            } catch (err) {
+                showStatus('❌ Initialization error: ' + err.message, 'error');
+                console.error('Full error:', err);
+            }
+        }
+
+        // Test on page load
+        window.addEventListener('load', () => {
+            showStatus('Page loaded. Ready to test!', 'info');
+            
+            // Check if PrintHub is available
+            if (typeof PrintHub !== 'undefined') {
+                showStatus('✅ PrintHub loaded successfully! Click a button to test.', 'success');
+            } else {
+                showStatus('❌ PrintHub not found! Check console.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

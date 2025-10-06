@@ -250,13 +250,54 @@
                 });
             }
 
+            async function printQRCodeTest(print) {
+                // Print Header
+                await print.writeText("TOKO SAYA", { 
+                    align: "center", 
+                    bold: true, 
+                    size: "double" 
+                });
+                await print.writeText("Jl. Contoh No. 123", { align: "center" });
+                await print.writeDashLine();
+                
+                // Print Items
+                await print.writeTextWith2Column("Nasi Goreng", "Rp 25.000");
+                await print.writeTextWith2Column("Es Teh", "Rp 5.000");
+                await print.writeDashLine();
+                
+                // Print Total
+                await print.writeTextWith2Column("TOTAL", "Rp 30.000", { bold: true });
+                await print.writeDashLine();
+                
+                // Print QR Code untuk payment
+                await print.writeText("SCAN UNTUK BAYAR", { 
+                    align: "center", 
+                    bold: true 
+                });
+                await print.writeLineBreak();
+                
+                await print.printQRCode("https://example.com/payment/12345", {
+                    size: "medium",
+                    align: "center",
+                    errorCorrection: "M",
+                    onFailed: (message) => {
+                        console.error("QR Code error:", message);
+                        alert("Gagal cetak QR: " + message);
+                    }
+                });
+                
+                await print.writeLineBreak();
+                await print.writeText("atau bayar tunai", { align: "center" });
+                await print.writeLineBreak(3);
+            }
+
             document.getElementById('connectToPrinter').addEventListener('click', () => {
                 let printer = new PrintHub.init({
                     paperSize: paperSize,
                     printerType: printerType,
                 });
                 printer.connectToPrint({
-                    onReady: (print) => startPrint(print),
+                    onReady: (print) => printQRCodeTest(print),
                     onFailed: (message) => {
                         console.log(message);
                         window.alert(message);
