@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Barcode - PrintHub</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0b7dda;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .config {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        select, input {
+            padding: 8px;
+            margin: 5px;
+            font-size: 14px;
+        }
+        h3 {
+            color: #333;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test PrintHub Barcode Feature</h1>
+    
+    <div class="config">
+        <h3>Printer Configuration:</h3>
+        <div>
+            <label>Paper Size:</label>
+            <select id="paperSize">
+                <option value="58">58mm</option>
+                <option value="80" selected>80mm</option>
+            </select>
+        </div>
+
+        <div>
+            <label>Printer Type:</label>
+            <select id="printerType">
+                <option value="bluetooth">Bluetooth</option>
+                <option value="usb">USB</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="config">
+        <h3>Barcode Test Options:</h3>
+        <div>
+            <label>Barcode Data:</label>
+            <input type="text" id="barcodeData" value="1234567890128" style="width: 200px;">
+        </div>
+        <div>
+            <label>Format:</label>
+            <select id="barcodeFormat">
+                <option value="CODE128" selected>CODE128</option>
+                <option value="CODE39">CODE39</option>
+                <option value="EAN13">EAN13</option>
+                <option value="EAN8">EAN8</option>
+                <option value="UPC">UPC</option>
+                <option value="ITF14">ITF14</option>
+            </select>
+        </div>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <button onclick="testBasic()">Test Basic Print</button>
+        <button onclick="testBarcode()">Test Barcode Print</button>
+        <button onclick="testBarcodeInvoice()">Test Invoice with Barcode</button>
+    </div>
+
+    <div id="status"></div>
+
+    <!-- Include PrintHub from dist -->
+    <script src="dist/index.global.js"></script>
+    
+    <script>
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = type;
+            statusDiv.innerHTML = message;
+            console.log(`[${type.toUpperCase()}]`, message);
+        }
+
+        function getPrinterConfig() {
+            return {
+                paperSize: document.getElementById('paperSize').value,
+                printerType: document.getElementById('printerType').value
+            };
+        }
+
+        function testBasic() {
+            showStatus('Testing basic print...', 'info');
+            
+            const config = getPrinterConfig();
+            const printer = new PrintHub.init(config);
+
+            printer.connectToPrint({
+                onReady: async (print) => {
+                    try {
+                        showStatus('Connected! Printing basic test...', 'info');
+                        
+                        await print.writeText("BASIC TEST", { 
+                            align: "center", 
+                            bold: true,
+                            size: "double"
+                        });
+                        await print.writeDashLine();
+                        await print.writeText("PrintHub v1.1.0", { align: "center" });
+                        await print.writeText("Basic printing works!", { align: "center" });
+                        await print.writeLineBreak({ count: 3 });
+                        
+                        showStatus('✅ Basic print successful!', 'success');
+                    } catch (err) {
+                        showStatus('❌ Print error: ' + err.message, 'error');
+                        console.error('Full error:', err);
+                    }
+                },
+                onFailed: (message) => {
+                    showStatus('❌ Connection failed: ' + message, 'error');
+                }
+            });
+        }
+
+        function testBarcode() {
+            showStatus('Testing barcode feature...', 'info');
+            
+            const config = getPrinterConfig();
+            const printer = new PrintHub.init(config);
+            
+            const barcodeData = document.getElementById('barcodeData').value;
+            const barcodeFormat = document.getElementById('barcodeFormat').value;
+
+            printer.connectToPrint({
+                onReady: async (print) => {
+                    try {
+                        showStatus('Connected! Generating barcode...', 'info');
+                        
+                        // Header
+                        await print.writeText("BARCODE TEST", { 
+                            align: "center", 
+                            bold: true,
+                            size: "double"
+                        });
+                        await print.writeDashLine();
+                        
+                        // Info
+                        await print.writeTextWith2Column("Format", barcodeFormat);
+                        await print.writeTextWith2Column("Data", barcodeData);
+                        await print.writeDashLine();
+                        
+                        // Barcode
+                        showStatus('Printing barcode...', 'info');
+                        
+                        await print.printBarcode(barcodeData, {
+                            format: barcodeFormat,
+                            width: 2,
+                            height: 60,
+                            displayValue: true,
+                            align: "center",
+                            onFailed: (msg) => {
+                                showStatus('❌ Barcode error: ' + msg, 'error');
+                            }
+                        });
+                        
+                        await print.writeLineBreak({ count: 3 });
+                        
+                        showStatus('✅ Barcode printed successfully!', 'success');
+                    } catch (err) {
+                        showStatus('❌ Print error: ' + err.message, 'error');
+                        console.error('Full error:', err);
+                    }
+                },
+                onFailed: (message) => {
+                    showStatus('❌ Connection failed: ' + message, 'error');
+                }
+            });
+        }
+
+        function testBarcodeInvoice() {
+            showStatus('Testing invoice with barcode...', 'info');
+            
+            const config = getPrinterConfig();
+            const printer = new PrintHub.init(config);
+
+            printer.connectToPrint({
+                onReady: async (print) => {
+                    try {
+                        showStatus('Connected! Creating invoice...', 'info');
+                        
+                        // Header
+                        await print.writeText("TOKO SAYA", { 
+                            align: "center", 
+                            bold: true,
+                            size: "double"
+                        });
+                        await print.writeText("Jl. Contoh No. 123", { align: "center" });
+                        await print.writeText("Telp: 021-12345678", { align: "center" });
+                        await print.writeDashLine();
+                        
+                        // Invoice Info
+                        await print.writeTextWith2Column("No Invoice", "INV-001");
+                        await print.writeTextWith2Column("Tanggal", "06/10/2024");
+                        await print.writeDashLine();
+                        
+                        // Items
+                        await print.writeTextWith2Column("Nasi Goreng", "Rp 25.000");
+                        await print.writeTextWith2Column("Es Teh", "Rp 5.000");
+                        await print.writeTextWith2Column("Ayam Bakar", "Rp 30.000");
+                        await print.writeDashLine();
+                        
+                        // Total
+                        await print.writeTextWith2Column("TOTAL", "Rp 60.000", { 
+                            bold: true,
+                            size: "double"
+                        });
+                        await print.writeDashLine();
+                        
+                        // Barcode
+                        await print.writeText("Scan barcode untuk tracking:", { 
+                            align: "center",
+                            bold: true
+                        });
+                        await print.writeLineBreak();
+                        
+                        await print.printBarcode("INV001", {
+                            format: "CODE128",
+                            width: 2,
+                            height: 50,
+                            displayValue: true,
+                            align: "center"
+                        });
+                        
+                        await print.writeLineBreak();
+                        
+                        // Footer
+                        await print.writeText("Terima Kasih", { 
+                            align: "center",
+                            bold: true
+                        });
+                        await print.writeText("Selamat Datang Kembali", { 
+                            align: "center"
+                        });
+                        
+                        await print.writeLineBreak({ count: 5 });
+                        
+                        showStatus('✅ Invoice with barcode printed successfully!', 'success');
+                    } catch (err) {
+                        showStatus('❌ Print error: ' + err.message, 'error');
+                        console.error('Full error:', err);
+                    }
+                },
+                onFailed: (message) => {
+                    showStatus('❌ Connection failed: ' + message, 'error');
+                }
+            });
+        }
+
+        // Test on page load
+        window.addEventListener('load', () => {
+            showStatus('Page loaded. Ready to test!', 'info');
+            
+            if (typeof PrintHub !== 'undefined') {
+                showStatus('✅ PrintHub loaded! Click a button to test barcode feature.', 'success');
+                
+                // Check if printBarcode method exists
+                const printer = new PrintHub.init();
+                if (typeof printer.printBarcode === 'function') {
+                    console.log('✅ printBarcode method is available');
+                } else {
+                    showStatus('⚠️ printBarcode method not found. You may need to rebuild the dist files.', 'error');
+                }
+            } else {
+                showStatus('❌ PrintHub not found! Check if dist/index.global.js exists.', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

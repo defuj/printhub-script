@@ -11,7 +11,7 @@ export default defineConfig({
   tsconfig: "tsconfig.json",
   globalName: "PrintHub",
   platform: "browser",
-  noExternal: ["qrcode"],
+  noExternal: ["qrcode", "jsbarcode"],
   esbuildOptions(options) {
     options.platform = "browser";
     options.mainFields = ["browser", "module", "main"];
