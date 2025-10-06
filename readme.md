@@ -10,19 +10,20 @@ PrintHub is a JavaScript plugin for printing text using a Bluetooth or USB therm
 ## Features
 
 1. **Print QR Code** - Generate and print QR codes for payments (QRIS), URLs, tracking, and more. 🆕
-2. Print Image from URL with alignment option.
-3. Print text with various options like bold, underline, alignment, and text size.
-4. Print text in two columns.
-5. Print dashed lines.
-6. Print line breaks.
-7. Supports two paper sizes: "58mm" and "80mm".
-8. Supports connecting to Bluetooth thermal printers.
-9. Supports connecting to USB thermal printers.
-10. Compatible with modern browsers such as Chrome, Firefox, and Edge.
-11. Node.js compatible.
-12. Supports usage via CDN.
-13. Supports usage via NPM.
-14. ES6 compatible.
+2. **Print Barcode** - Generate and print barcodes in various formats (CODE128, EAN13, UPC, etc). 🆕
+3. Print Image from URL with alignment option.
+4. Print text with various options like bold, underline, alignment, and text size.
+5. Print text in two columns.
+6. Print dashed lines.
+7. Print line breaks.
+8. Supports two paper sizes: "58mm" and "80mm".
+9. Supports connecting to Bluetooth thermal printers.
+10. Supports connecting to USB thermal printers.
+11. Compatible with modern browsers such as Chrome, Firefox, and Edge.
+12. Node.js compatible.
+13. Supports usage via CDN.
+14. Supports usage via NPM.
+15. ES6 compatible.
 
 ## Installation
 
@@ -53,7 +54,7 @@ const PrintHub = require("printhub");
 Or use specific version:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/printhub@1.1.0/dist/index.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/printhub@1.2.0/dist/index.global.js"></script>
 ```
 
 ## Usage
@@ -369,6 +370,101 @@ printer.connectToPrint({
 
     For more details, see [QR Code Guide](./QR_CODE_GUIDE.md).
 
+13. **Print Barcode** 🆕
+
+    Print barcodes in various formats for products, invoices, tickets, and inventory management.
+
+    ```javascript
+    printer.connectToPrint({
+      onReady: async (print) => {
+        // Simple barcode
+        await print.printBarcode("1234567890");
+        
+        // Barcode with options
+        await print.printBarcode("5901234123457", {
+          format: "EAN13",      // Barcode format
+          width: 2,             // Line width (1-4)
+          height: 60,           // Height in pixels
+          displayValue: true,   // Show text below barcode
+          align: "center"       // Alignment
+        });
+      },
+      onFailed: (message) => {
+        console.log(message);
+      },
+    });
+    ```
+
+    **Example: Invoice with Barcode**
+
+    ```javascript
+    printer.connectToPrint({
+      onReady: async (print) => {
+        // Header
+        await print.writeText("INVOICE", { 
+          align: "center", 
+          bold: true,
+          size: "double"
+        });
+        await print.writeDashLine();
+        
+        // Invoice Info
+        await print.writeTextWith2Column("No Invoice", "INV-001");
+        await print.writeTextWith2Column("Tanggal", "06/10/2024");
+        await print.writeDashLine();
+        
+        // Items
+        await print.writeTextWith2Column("Product A", "Rp 50.000");
+        await print.writeTextWith2Column("Product B", "Rp 30.000");
+        await print.writeDashLine();
+        
+        // Total
+        await print.writeTextWith2Column("TOTAL", "Rp 80.000", { bold: true });
+        await print.writeDashLine();
+        
+        // Barcode for tracking
+        await print.writeText("Scan untuk tracking:", { 
+          align: "center",
+          bold: true
+        });
+        await print.writeLineBreak();
+        
+        await print.printBarcode("INV001", {
+          format: "CODE128",
+          width: 2,
+          height: 50,
+          displayValue: true,
+          align: "center"
+        });
+        
+        await print.writeLineBreak({ count: 3 });
+      },
+      onFailed: (message) => {
+        console.log(message);
+      },
+    });
+    ```
+
+    **Supported Barcode Formats:**
+    - `CODE128` (default) - Most versatile, alphanumeric
+    - `CODE39` - Alphanumeric, widely used
+    - `EAN13` - 13-digit product barcodes (e.g., 5901234123457)
+    - `EAN8` - 8-digit product barcodes
+    - `UPC` - Universal Product Code
+    - `ITF14` - 14-digit shipping container codes
+    - `MSI` - Modified Plessey, inventory management
+    - `pharmacode` - Pharmaceutical packaging
+    - `codabar` - Libraries, blood banks, logistics
+
+    **Barcode Options:**
+    - `format`: Barcode type (default: "CODE128")
+    - `width`: Line width, 1-4 (default: 2)
+    - `height`: Height in pixels (default: 50)
+    - `displayValue`: Show text below barcode (default: true)
+    - `align`: Alignment - "left", "center", "right" (default: "center")
+
+    For more details, see [Barcode Status](./BARCODE_STATUS.md).
+
 ### API
 
 | Method                                        | Description                                                             |
@@ -380,6 +476,7 @@ printer.connectToPrint({
 | `connectToPrint({ onReady, onFailed })`       | Connects to the printer and calls the `onReady` or `onFailed` callback. |
 | `putImageWithUrl(url, options)`               | Prints an image from a URL.                                             |
 | `printQRCode(text, options)` 🆕                | Generates and prints a QR code.                                          |
+| `printBarcode(text, options)` 🆕               | Generates and prints a barcode.                                          |
 
 ### Options for `printQRCode` Method 🆕
 
@@ -389,6 +486,17 @@ printer.connectToPrint({
 | `align`           | string   | Alignment: "left", "center", "right"                          | `"center"` |
 | `errorCorrection` | string   | Error correction level: "L", "M", "Q", "H"                    | `"M"`      |
 | `onFailed`        | function | Callback function when QR code generation fails              | -          |
+
+### Options for `printBarcode` Method 🆕
+
+| Option         | Type     | Description                                                    | Default     |
+| -------------- | -------- | -------------------------------------------------------------- | ----------- |
+| `format`       | string   | Barcode format: "CODE128", "CODE39", "EAN13", "EAN8", "UPC", etc | `"CODE128"` |
+| `width`        | number   | Line width (1-4)                                               | `2`         |
+| `height`       | number   | Height in pixels                                               | `50`        |
+| `displayValue` | boolean  | Show text below barcode                                        | `true`      |
+| `align`        | string   | Alignment: "left", "center", "right"                          | `"center"`  |
+| `onFailed`     | function | Callback function when barcode generation fails               | -           |
 
 ### Options for `writeText` and `writeTextWith2Column` Methods
 
@@ -405,33 +513,38 @@ PrintHub is perfect for various business needs:
 
 ### 🛒 Retail & E-commerce
 - Print receipts with QRIS payment QR codes
+- Product labels with barcodes (EAN13, UPC)
 - Order tracking QR codes for customers
 - Product information and pricing labels
-- Inventory management
+- Inventory management with barcode scanning
 
 ### 🍽️ Restaurant & F&B
 - Kitchen orders and bills
 - Table receipts with payment QR (QRIS, GoPay, OVO)
 - Customer feedback survey QR codes
 - Digital menu QR codes
+- Order number tickets
 
 ### 🎫 Events & Ticketing
 - E-tickets with QR codes for validation
-- Event passes and badges
+- Event passes with barcodes
 - Queue management tickets
 - Access control
+- Ticket verification systems
 
 ### 🏪 Point of Sale (POS)
 - Sales receipts with payment options
+- Product barcodes for inventory
 - Customer loyalty program QR codes
 - Promotional coupons
 - Store information and social media QR codes
 
 ### 📦 Logistics & Shipping
-- Shipping labels with tracking QR codes
+- Shipping labels with tracking barcodes (CODE128)
+- Package tracking QR codes
 - Delivery receipts
 - Warehouse management
-- Package tracking
+- Inventory tracking
 
 ## Tips for Best Results
 
@@ -442,6 +555,16 @@ PrintHub is perfect for various business needs:
 - Always use **center alignment** for better scanning
 - For payment QR, use error correction level **M** or **Q**
 - Add descriptive text above/below the QR code
+
+### For Barcodes
+- Use **CODE128** for alphanumeric data (invoices, tracking)
+- Use **EAN13** or **UPC** for product barcodes (must be valid format)
+- Use **CODE39** for simple alphanumeric needs
+- Set `displayValue: true` to show the barcode text
+- Use **center alignment** for better scanning
+- Recommended height: 50-60 pixels for good readability
+- Keep width at 2 for standard printers
+- Ensure good contrast (dark barcode on light background)
 
 ### For Images
 - Use high contrast images (black & white works best)
@@ -511,7 +634,16 @@ PrintHub is perfect for various business needs:
 
 ## Change Log
 
-### v1.1.0 🆕
+### v1.2.0 🆕
+
+- **NEW FEATURE**: `printBarcode()` - Generate and print barcodes in 9 different formats
+- Support for CODE128, CODE39, EAN13, EAN8, UPC, ITF14, MSI, pharmacode, and codabar
+- Customizable barcode width, height, and display options
+- Perfect for product labels, inventory management, invoices, and tickets
+- Added comprehensive barcode documentation
+- See [Barcode Status](./BARCODE_STATUS.md) for implementation details
+
+### v1.1.0
 
 - **NEW FEATURE**: `printQRCode()` - Generate and print QR codes for payments, URLs, tracking, and more
 - Added support for 3 QR code sizes (small, medium, large)
@@ -562,6 +694,7 @@ PrintHub is perfect for various business needs:
 
 - **[Complete Usage Guide](./USAGE_GUIDE.md)** - Comprehensive guide with examples for all features
 - **[QR Code Guide](./QR_CODE_GUIDE.md)** - Detailed guide for QR code printing with real-world examples
+- **[Barcode Status](./BARCODE_STATUS.md)** - Barcode implementation details and troubleshooting
 - **[Feature Ideas](./FEATURE_IDEAS.md)** - Upcoming features and roadmap
 
 ## Contributing

@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import JsBarcode from "jsbarcode";
 
 /**
  * PrintHub - Library untuk mencetak ke thermal printer via Bluetooth atau USB
@@ -110,10 +111,10 @@ class PrintHub {
    */
   async setDefault(charp: BluetoothRemoteGATTCharacteristic) {
     if (charp) {
-      await charp.writeValue(this.left);
-      await charp.writeValue(this.normalSize);
-      await charp.writeValue(this.boldOff);
-      await charp.writeValue(this.underlineOff);
+      await charp.writeValue(this.left.buffer as ArrayBuffer);
+      await charp.writeValue(this.normalSize.buffer as ArrayBuffer);
+      await charp.writeValue(this.boldOff.buffer as ArrayBuffer);
+      await charp.writeValue(this.underlineOff.buffer as ArrayBuffer);
     }
   }
 
@@ -369,18 +370,18 @@ class PrintHub {
     },
     device: BluetoothRemoteGATTCharacteristic
   ) {
-    if (bold) await device.writeValue(this.boldOn);
-    if (underline) await device.writeValue(this.underlineOn);
+    if (bold) await device.writeValue(this.boldOn.buffer as ArrayBuffer);
+    if (underline) await device.writeValue(this.underlineOn.buffer as ArrayBuffer);
 
     if (align === "center") {
-      await device.writeValue(this.center);
+      await device.writeValue(this.center.buffer as ArrayBuffer);
     } else if (align === "right") {
-      await device.writeValue(this.right);
+      await device.writeValue(this.right.buffer as ArrayBuffer);
     }
 
-    if (size === "double") await device.writeValue(this.doubleSize);
+    if (size === "double") await device.writeValue(this.doubleSize.buffer as ArrayBuffer);
 
-    await device.writeValue(this.encoder.encode(text));
+    await device.writeValue(this.encoder.encode(text).buffer as ArrayBuffer);
     await this.setDefault(device);
     await this.writeLineBreak();
   }
@@ -477,38 +478,38 @@ class PrintHub {
       } else {
         if (bold) {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.boldOn
+            this.boldOn.buffer as ArrayBuffer
           );
         }
 
         if (underline) {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.underlineOn
+            this.underlineOn.buffer as ArrayBuffer
           );
         }
 
         if (align === "center") {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.center
+            this.center.buffer as ArrayBuffer
           );
         } else if (align === "right") {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.right
+            this.right.buffer as ArrayBuffer
           );
         } else {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.left
+            this.left.buffer as ArrayBuffer
           );
         }
 
         if (size === "double") {
           await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-            this.doubleSize
+            this.doubleSize.buffer as ArrayBuffer
           );
         }
 
         await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-          this.encoder.encode(text)
+          this.encoder.encode(text).buffer as ArrayBuffer
         );
         await this.setDefault(device as BluetoothRemoteGATTCharacteristic);
         await this.writeLineBreak();
@@ -697,14 +698,14 @@ class PrintHub {
 
     if (align === "center") {
       await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-        this.center
+        this.center.buffer as ArrayBuffer
       );
     } else if (align === "right") {
       await (device as BluetoothRemoteGATTCharacteristic).writeValue(
-        this.right
+        this.right.buffer as ArrayBuffer
       );
     } else {
-      await (device as BluetoothRemoteGATTCharacteristic).writeValue(this.left);
+      await (device as BluetoothRemoteGATTCharacteristic).writeValue(this.left.buffer as ArrayBuffer);
     }
 
     let imageData: Uint8ClampedArray;
@@ -783,7 +784,7 @@ class PrintHub {
     while (index < data.length) {
       const chunkSize = Math.min(512, data.length - index);
       const chunk = data.slice(index, index + chunkSize);
-      await device.writeValue(chunk);
+      await device.writeValue(chunk.buffer as ArrayBuffer);
       index += chunkSize;
     }
   }
@@ -806,7 +807,7 @@ class PrintHub {
     if (!usbEndPoint) {
       throw new Error("No suitable endpoint found for USB printing.");
     }
-    await device.transferOut(usbEndPoint.endpointNumber, data);
+    await device.transferOut(usbEndPoint.endpointNumber, data.buffer as ArrayBuffer);
   }
 
   /**
@@ -990,6 +991,123 @@ class PrintHub {
 
     } catch (error: any) {
       const errorMessage = error.message || "Failed to generate or print QR Code";
+      if (onFailed) {
+        onFailed(errorMessage);
+      } else {
+        throw new Error(errorMessage);
+      }
+    }
+  }
+
+  /**
+   * Mencetak Barcode dari text/data
+   * Support berbagai format: CODE128, EAN13, UPC, CODE39, ITF14, dll
+   * 
+   * @param {string} text - Text/data untuk di-encode ke Barcode
+   * @param {Object} [options] - Opsi untuk Barcode
+   * @param {string} [options.format="CODE128"] - Format barcode: "CODE128", "EAN13", "UPC", "CODE39", "ITF14", dll
+   * @param {number} [options.width=2] - Lebar garis barcode (1-4)
+   * @param {number} [options.height=50] - Tinggi barcode dalam pixels
+   * @param {boolean} [options.displayValue=true] - Tampilkan text di bawah barcode
+   * @param {string} [options.align="center"] - Alignment: "left", "center", "right"
+   * @param {Function} [options.onFailed] - Callback jika gagal
+   * 
+   * @example
+   * // Barcode sederhana
+   * await print.printBarcode("1234567890");
+   * 
+   * @example
+   * // Barcode dengan format EAN13
+   * await print.printBarcode("5901234123457", {
+   *   format: "EAN13",
+   *   height: 60,
+   *   displayValue: true,
+   *   align: "center"
+   * });
+   * 
+   * @example
+   * // Barcode untuk produk
+   * await print.printBarcode(productCode, {
+   *   format: "CODE128",
+   *   width: 2,
+   *   height: 50,
+   *   displayValue: true
+   * });
+   * 
+   * @example
+   * // Barcode dengan error handling
+   * await print.printBarcode("ABC123", {
+   *   format: "CODE39",
+   *   onFailed: (message) => {
+   *     console.error("Barcode error:", message);
+   *     alert(message);
+   *   }
+   * });
+   * 
+   * @example
+   * // Contoh lengkap: Invoice dengan barcode
+   * printer.connectToPrint({
+   *   onReady: async (print) => {
+   *     await print.writeText("INVOICE", { align: "center", bold: true });
+   *     await print.writeDashLine();
+   *     
+   *     await print.writeTextWith2Column("No Invoice", "INV-001");
+   *     await print.writeTextWith2Column("Tanggal", "06/10/2024");
+   *     await print.writeDashLine();
+   *     
+   *     // Barcode invoice
+   *     await print.printBarcode("INV001", {
+   *       format: "CODE128",
+   *       height: 50,
+   *       displayValue: true,
+   *       align: "center"
+   *     });
+   *     
+   *     await print.writeLineBreak({ count: 3 });
+   *   },
+   *   onFailed: (message) => alert(message)
+   * });
+   */
+  async printBarcode(
+    text: string,
+    options: {
+      format?: "CODE128" | "CODE39" | "EAN13" | "EAN8" | "UPC" | "ITF14" | "MSI" | "pharmacode" | "codabar";
+      width?: number;
+      height?: number;
+      displayValue?: boolean;
+      align?: string;
+      onFailed?: (message: string) => void;
+    } = {}
+  ): Promise<void> {
+    const {
+      format = "CODE128",
+      width = 2,
+      height = 50,
+      displayValue = true,
+      align = "center",
+      onFailed
+    } = options;
+
+    try {
+      // Create canvas for barcode
+      const canvas = document.createElement("canvas");
+      
+      // Generate barcode
+      JsBarcode(canvas, text, {
+        format: format,
+        width: width,
+        height: height,
+        displayValue: displayValue,
+        margin: 10,
+        background: "#ffffff",
+        lineColor: "#000000"
+      });
+
+      // Print barcode dari canvas
+      await this.printImageData(canvas, align);
+
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to generate or print Barcode";
       if (onFailed) {
         onFailed(errorMessage);
       } else {
