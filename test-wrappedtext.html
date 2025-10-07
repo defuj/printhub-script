@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrintHub - Wrapped Text Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .feature-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .settings {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .setting-group {
+            margin-bottom: 15px;
+        }
+
+        .setting-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .examples {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .examples h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .example-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            border-left: 4px solid #667eea;
+        }
+
+        .example-title {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .example-text {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        .info-box h4 {
+            color: #2196F3;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+
+        .preview-box {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .preview-box .line {
+            white-space: pre;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 2px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="feature-badge">🆕 NEW FEATURE</div>
+        <h1>📝 PrintHub Wrapped Text</h1>
+        <p class="subtitle">Test the new writeWrappedText() feature for auto-wrapping long text</p>
+
+        <div class="settings">
+            <div class="setting-group">
+                <label for="paperSize">📏 Paper Size:</label>
+                <select id="paperSize" onchange="updatePreview()">
+                    <option value="58">58mm (32 characters)</option>
+                    <option value="80">80mm (42 characters)</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label for="printerType">🔌 Printer Type:</label>
+                <select id="printerType">
+                    <option value="bluetooth">Bluetooth</option>
+                    <option value="usb">USB</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label for="textAlign">📍 Alignment:</label>
+                <select id="textAlign" onchange="updatePreview()">
+                    <option value="left">Left</option>
+                    <option value="center">Center</option>
+                    <option value="right">Right</option>
+                    <option value="justify">Justify</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label for="customText">✏️ Custom Text:</label>
+                <textarea id="customText" onkeyup="updatePreview()" placeholder="Enter your long text here...">Jl. Sudirman No. 123, Blok A, RT 01/RW 02, Kelurahan Menteng, Kecamatan Menteng, Jakarta Pusat 10310. Telepon: 021-12345678, Email: info@tokosaya.com</textarea>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="testWrappedText()">
+                🖨️ Test Wrapped Text
+            </button>
+            <button class="btn-secondary" onclick="testAddress()">
+                📮 Test Address
+            </button>
+            <button class="btn-secondary" onclick="testTerms()">
+                📄 Test Terms
+            </button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="info-box">
+            <h4>📋 Preview (How it will wrap):</h4>
+            <div id="preview" class="preview-box"></div>
+        </div>
+
+        <div class="info-box">
+            <h4>ℹ️ What This Feature Does:</h4>
+            <ul>
+                <li><strong>Auto-Wrapping:</strong> Long text automatically wraps to multiple lines</li>
+                <li><strong>Word-Preserving:</strong> Words stay intact, no mid-word breaks</li>
+                <li><strong>Alignment Support:</strong> Left, center, right, or justify</li>
+                <li><strong>Smart Spacing:</strong> Justify mode adds even spacing between words</li>
+                <li><strong>Paper-Aware:</strong> Adapts to 58mm or 80mm paper width</li>
+            </ul>
+        </div>
+
+        <div class="examples">
+            <h3>📝 Example Usage:</h3>
+            
+            <div class="example-item">
+                <div class="example-title">Basic Usage (Long Address)</div>
+                <pre class="code-block">await print.writeWrappedText(
+  "Jl. Sudirman No. 123, Blok A, RT 01/RW 02, Kelurahan Menteng, Kecamatan Menteng, Jakarta Pusat 10310"
+);</pre>
+            </div>
+
+            <div class="example-item">
+                <div class="example-title">With Justify Alignment</div>
+                <pre class="code-block">await print.writeWrappedText(
+  "Produk ini adalah hasil penelitian panjang yang menghasilkan kualitas terbaik",
+  { align: "justify" }
+);</pre>
+            </div>
+
+            <div class="example-item">
+                <div class="example-title">Terms & Conditions</div>
+                <pre class="code-block">await print.writeWrappedText(
+  "SYARAT DAN KETENTUAN: Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan kecuali ada cacat produksi",
+  { bold: true, align: "left" }
+);</pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="./dist/index.global.js"></script>
+    <script>
+        function showStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.className = 'status ' + (isError ? 'error' : 'success');
+            status.textContent = message;
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+
+        function wrapTextPreview(text, maxWidth, justify = false) {
+            const cleanText = text.trim().replace(/\s+/g, ' ');
+            if (cleanText.length <= maxWidth) {
+                return [cleanText];
+            }
+
+            const lines = [];
+            const words = cleanText.split(' ');
+            let currentLine = '';
+
+            for (let i = 0; i < words.length; i++) {
+                const word = words[i];
+                const testLine = currentLine ? `${currentLine} ${word}` : word;
+
+                if (testLine.length <= maxWidth) {
+                    currentLine = testLine;
+                } else {
+                    if (currentLine) {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    } else {
+                        if (word.length > maxWidth) {
+                            let remainingWord = word;
+                            while (remainingWord.length > maxWidth) {
+                                lines.push(remainingWord.substring(0, maxWidth));
+                                remainingWord = remainingWord.substring(maxWidth);
+                            }
+                            currentLine = remainingWord;
+                        } else {
+                            currentLine = word;
+                        }
+                    }
+                }
+            }
+
+            if (currentLine) {
+                lines.push(currentLine);
+            }
+
+            return lines;
+        }
+
+        function updatePreview() {
+            const paperSize = document.getElementById('paperSize').value;
+            const align = document.getElementById('textAlign').value;
+            const text = document.getElementById('customText').value;
+            const maxWidth = paperSize === "58" ? 32 : 42;
+
+            const lines = wrapTextPreview(text, maxWidth, align === 'justify');
+            const preview = document.getElementById('preview');
+            
+            preview.innerHTML = '';
+            lines.forEach((line, index) => {
+                const div = document.createElement('div');
+                div.className = 'line';
+                
+                let displayLine = line;
+                if (align === 'center') {
+                    const padding = Math.floor((maxWidth - line.length) / 2);
+                    displayLine = ' '.repeat(padding) + line;
+                } else if (align === 'right') {
+                    const padding = maxWidth - line.length;
+                    displayLine = ' '.repeat(padding) + line;
+                }
+                
+                div.textContent = displayLine;
+                preview.appendChild(div);
+            });
+
+            preview.innerHTML += `<div style="margin-top: 10px; color: #666; font-size: 11px;">Total lines: ${lines.length} | Max width: ${maxWidth} chars</div>`;
+        }
+
+        async function testWrappedText() {
+            try {
+                const paperSize = document.getElementById('paperSize').value;
+                const printerType = document.getElementById('printerType').value;
+                const align = document.getElementById('textAlign').value;
+                const text = document.getElementById('customText').value;
+
+                if (!text.trim()) {
+                    showStatus("❌ Please enter some text to print", true);
+                    return;
+                }
+
+                const printer = new PrintHub.init({
+                    paperSize: paperSize,
+                    printerType: printerType
+                });
+
+                printer.connectToPrint({
+                    onReady: async (print) => {
+                        try {
+                            await print.writeText("WRAPPED TEXT TEST", {
+                                align: "center",
+                                bold: true,
+                                size: "double"
+                            });
+                            await print.writeDashLine();
+                            await print.writeLineBreak();
+
+                            await print.writeWrappedText(text, {
+                                align: align
+                            });
+
+                            await print.writeLineBreak({ count: 3 });
+
+                            showStatus("✅ Wrapped text printed successfully!");
+                        } catch (error) {
+                            showStatus("❌ Error during printing: " + error.message, true);
+                        }
+                    },
+                    onFailed: (message) => {
+                        showStatus("❌ Connection failed: " + message, true);
+                    }
+                });
+            } catch (error) {
+                showStatus("❌ Error: " + error.message, true);
+            }
+        }
+
+        async function testAddress() {
+            try {
+                const paperSize = document.getElementById('paperSize').value;
+                const printerType = document.getElementById('printerType').value;
+
+                const printer = new PrintHub.init({
+                    paperSize: paperSize,
+                    printerType: printerType
+                });
+
+                printer.connectToPrint({
+                    onReady: async (print) => {
+                        try {
+                            await print.writeText("TOKO SAYA", {
+                                align: "center",
+                                bold: true,
+                                size: "double"
+                            });
+                            await print.writeDashLine();
+
+                            await print.writeText("Alamat:", { bold: true });
+                            await print.writeWrappedText(
+                                "Jl. Sudirman No. 123, Blok A, RT 01/RW 02, Kelurahan Menteng, Kecamatan Menteng, Jakarta Pusat 10310",
+                                { align: "left" }
+                            );
+
+                            await print.writeLineBreak();
+                            await print.writeText("Kontak:", { bold: true });
+                            await print.writeWrappedText(
+                                "Telepon: 021-12345678, Fax: 021-87654321, Email: info@tokosaya.com, Website: www.tokosaya.com",
+                                { align: "left" }
+                            );
+
+                            await print.writeLineBreak({ count: 3 });
+
+                            showStatus("✅ Address test printed successfully!");
+                        } catch (error) {
+                            showStatus("❌ Error during printing: " + error.message, true);
+                        }
+                    },
+                    onFailed: (message) => {
+                        showStatus("❌ Connection failed: " + message, true);
+                    }
+                });
+            } catch (error) {
+                showStatus("❌ Error: " + error.message, true);
+            }
+        }
+
+        async function testTerms() {
+            try {
+                const paperSize = document.getElementById('paperSize').value;
+                const printerType = document.getElementById('printerType').value;
+
+                const printer = new PrintHub.init({
+                    paperSize: paperSize,
+                    printerType: printerType
+                });
+
+                printer.connectToPrint({
+                    onReady: async (print) => {
+                        try {
+                            await print.writeText("SYARAT DAN KETENTUAN", {
+                                align: "center",
+                                bold: true,
+                                underline: true
+                            });
+                            await print.writeDashLine();
+                            await print.writeLineBreak();
+
+                            await print.writeWrappedText(
+                                "1. Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan kecuali terdapat cacat produksi yang dibuktikan dengan membawa struk pembelian.",
+                                { bold: false, align: "justify" }
+                            );
+
+                            await print.writeLineBreak();
+
+                            await print.writeWrappedText(
+                                "2. Garansi berlaku selama 30 hari sejak tanggal pembelian dengan syarat dan ketentuan yang berlaku sesuai kebijakan toko.",
+                                { bold: false, align: "justify" }
+                            );
+
+                            await print.writeLineBreak();
+
+                            await print.writeWrappedText(
+                                "3. Kerusakan akibat kesalahan pemakaian tidak ditanggung oleh pihak toko dan menjadi tanggung jawab pembeli sepenuhnya.",
+                                { bold: false, align: "justify" }
+                            );
+
+                            await print.writeLineBreak({ count: 2 });
+                            await print.writeDashLine();
+                            await print.writeText("Terima Kasih", { align: "center" });
+                            await print.writeLineBreak({ count: 3 });
+
+                            showStatus("✅ Terms & conditions printed successfully!");
+                        } catch (error) {
+                            showStatus("❌ Error during printing: " + error.message, true);
+                        }
+                    },
+                    onFailed: (message) => {
+                        showStatus("❌ Connection failed: " + message, true);
+                    }
+                });
+            } catch (error) {
+                showStatus("❌ Error: " + error.message, true);
+            }
+        }
+
+        // Initialize preview on load
+        window.onload = function() {
+            updatePreview();
+        };
+    </script>
+</body>
+</html>

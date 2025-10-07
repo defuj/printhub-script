@@ -761,6 +761,202 @@ class PrintHub {
   }
 
   /**
+   * Mencetak teks panjang dengan auto-wrapping
+   * Teks akan otomatis dipecah ke beberapa baris sesuai lebar kertas
+   * Berguna untuk mencetak alamat, deskripsi produk, notes, atau terms & conditions
+   * 
+   * @param {string} text - Teks yang akan dicetak (bisa sangat panjang)
+   * @param {Object} [options] - Opsi format teks
+   * @param {boolean} [options.bold=false] - Cetak dengan huruf tebal
+   * @param {boolean} [options.underline=false] - Cetak dengan garis bawah
+   * @param {string} [options.align="left"] - Alignment: "left", "center", "right", "justify"
+   * @param {string} [options.size="normal"] - Ukuran teks: "normal" atau "double"
+   * @param {number} [options.maxWidth] - Lebar maksimal per baris (default: sesuai paper size)
+   * 
+   * @example
+   * // Mencetak alamat panjang
+   * await print.writeWrappedText(
+   *   "Jl. Sudirman No. 123, Blok A, RT 01/RW 02, Kelurahan Menteng, Kecamatan Menteng, Jakarta Pusat 10310"
+   * );
+   * 
+   * @example
+   * // Deskripsi produk dengan alignment
+   * await print.writeWrappedText(
+   *   "Produk ini adalah hasil dari penelitian panjang yang menghasilkan kualitas terbaik dengan harga yang terjangkau untuk semua kalangan",
+   *   { align: "justify" }
+   * );
+   * 
+   * @example
+   * // Terms & conditions dengan bold
+   * await print.writeWrappedText(
+   *   "SYARAT DAN KETENTUAN: Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan kecuali ada cacat produksi. Garansi berlaku 30 hari sejak tanggal pembelian.",
+   *   { bold: true, align: "left" }
+   * );
+   * 
+   * @example
+   * // Custom max width
+   * await print.writeWrappedText(
+   *   "Teks ini akan di-wrap dengan lebar maksimal 20 karakter per baris",
+   *   { maxWidth: 20, align: "center" }
+   * );
+   */
+  async writeWrappedText(
+    text: string,
+    {
+      bold = false,
+      underline = false,
+      align = "left",
+      size = "normal",
+      maxWidth,
+    }: {
+      bold?: boolean;
+      underline?: boolean;
+      align?: string;
+      size?: string;
+      maxWidth?: number;
+    } = {}
+  ) {
+    if (!text || text.trim().length === 0) {
+      return;
+    }
+
+    // Determine max width based on paper size and text size
+    const baseWidth = this.paperSize === "58" ? 32 : 42;
+    const effectiveWidth = maxWidth || (size === "double" ? Math.floor(baseWidth / 2) : baseWidth);
+
+    // Wrap the text into multiple lines
+    const wrappedLines = this.wrapText(text, effectiveWidth, align === "justify");
+
+    // Print each line
+    for (let i = 0; i < wrappedLines.length; i++) {
+      const line = wrappedLines[i];
+      const isLastLine = i === wrappedLines.length - 1;
+      
+      // Don't justify the last line
+      const lineAlign = (align === "justify" && !isLastLine) ? "left" : align;
+      
+      await this.writeText(line, {
+        bold,
+        underline,
+        align: lineAlign === "justify" ? "left" : lineAlign,
+        size
+      });
+    }
+  }
+
+  /**
+   * Method internal untuk membungkus teks panjang menjadi beberapa baris
+   * Mempertahankan kata-kata utuh dan tidak memotong di tengah kata
+   * 
+   * @private
+   * @param {string} text - Teks yang akan dibungkus
+   * @param {number} maxWidth - Lebar maksimal per baris
+   * @param {boolean} justify - Apakah text harus di-justify (spasi merata)
+   * @returns {string[]} Array berisi baris-baris text yang sudah dibungkus
+   */
+  private wrapText(text: string, maxWidth: number, justify: boolean = false): string[] {
+    // Clean up the text (remove extra spaces, normalize whitespace)
+    const cleanText = text.trim().replace(/\s+/g, ' ');
+    
+    if (cleanText.length <= maxWidth) {
+      return [cleanText];
+    }
+
+    const lines: string[] = [];
+    const words = cleanText.split(' ');
+    let currentLine = '';
+
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+
+      if (testLine.length <= maxWidth) {
+        currentLine = testLine;
+      } else {
+        // If current line is not empty, save it
+        if (currentLine) {
+          // Apply justification if needed (except for last line)
+          if (justify && i < words.length - 1) {
+            lines.push(this.justifyLine(currentLine, maxWidth));
+          } else {
+            lines.push(currentLine);
+          }
+          currentLine = word;
+        } else {
+          // Word is too long, need to break it
+          if (word.length > maxWidth) {
+            // Break long word
+            let remainingWord = word;
+            while (remainingWord.length > maxWidth) {
+              lines.push(remainingWord.substring(0, maxWidth));
+              remainingWord = remainingWord.substring(maxWidth);
+            }
+            currentLine = remainingWord;
+          } else {
+            currentLine = word;
+          }
+        }
+      }
+    }
+
+    // Add the last line
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+
+    return lines;
+  }
+
+  /**
+   * Method internal untuk justify text (menambahkan spasi merata)
+   * 
+   * @private
+   * @param {string} line - Baris text yang akan di-justify
+   * @param {number} targetWidth - Lebar target yang diinginkan
+   * @returns {string} Baris text yang sudah di-justify
+   */
+  private justifyLine(line: string, targetWidth: number): string {
+    const words = line.trim().split(' ');
+    
+    // Single word, no justification needed
+    if (words.length === 1) {
+      return line;
+    }
+
+    // Calculate total characters in words
+    const totalWordLength = words.reduce((sum, word) => sum + word.length, 0);
+    const totalSpacesNeeded = targetWidth - totalWordLength;
+    const gapCount = words.length - 1;
+
+    // If can't justify properly, return as is
+    if (totalSpacesNeeded <= 0 || gapCount <= 0) {
+      return line;
+    }
+
+    // Calculate spaces per gap
+    const baseSpaces = Math.floor(totalSpacesNeeded / gapCount);
+    const extraSpaces = totalSpacesNeeded % gapCount;
+
+    // Build justified line
+    let justifiedLine = '';
+    for (let i = 0; i < words.length; i++) {
+      justifiedLine += words[i];
+      
+      if (i < words.length - 1) {
+        // Add base spaces
+        justifiedLine += ' '.repeat(baseSpaces);
+        
+        // Add extra space to first N gaps
+        if (i < extraSpaces) {
+          justifiedLine += ' ';
+        }
+      }
+    }
+
+    return justifiedLine;
+  }
+
+  /**
    * Menghubungkan ke printer dan siap untuk mencetak
    * Method utama yang harus dipanggil pertama kali sebelum mencetak
    * Akan menampilkan dialog pemilihan printer (Bluetooth/USB) di browser
