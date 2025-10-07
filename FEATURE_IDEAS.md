@@ -21,8 +21,8 @@ Dokumen ini berisi ide-ide fitur yang bisa ditambahkan untuk meningkatkan fungsi
 
 ## 1. Fitur Pencetakan Teks Lanjutan
 
-### 1.1 ✨ **writeTextMultiColumn()** - Cetak 3+ Kolom
-**Prioritas:** 🔥 High | **Difficulty:** ⭐⭐ Medium
+### 1.1 ✅ **writeTextMultiColumn()** - Cetak 3+ Kolom (COMPLETED v1.3.0)
+**Prioritas:** 🔥 High | **Difficulty:** ⭐⭐ Medium | **Status:** ✅ DONE
 
 Mencetak teks dalam 3 atau lebih kolom untuk struk yang lebih kompleks.
 
@@ -41,6 +41,15 @@ await print.writeTextMultiColumn(
 - Struk dengan jumlah barang
 - Invoice detail dengan multiple columns
 - Report dengan tabel sederhana
+
+**Implementation Notes:**
+- ✅ Supports 3 or more columns
+- ✅ Custom column widths or auto-calculated
+- ✅ Individual alignment per column
+- ✅ Bold, underline, and size options
+- ✅ Works with both 58mm and 80mm paper
+- ✅ Bluetooth and USB support
+- ✅ Automatic text truncation with "~" indicator
 
 ---
 
