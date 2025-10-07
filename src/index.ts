@@ -387,6 +387,249 @@ class PrintHub {
   }
 
   /**
+   * Mencetak teks dalam multiple kolom (3 atau lebih kolom)
+   * Berguna untuk mencetak data tabel seperti: "No | Item | Qty | Price"
+   * 
+   * @param {string[]} columns - Array berisi teks untuk setiap kolom
+   * @param {Object} [options] - Opsi format dan layout
+   * @param {number[]} [options.columnWidths] - Lebar setiap kolom dalam karakter. Jika tidak diset, akan dibagi rata.
+   * @param {string[]} [options.align] - Alignment untuk setiap kolom: "left", "center", "right". Default semua "left".
+   * @param {boolean} [options.bold=false] - Cetak dengan huruf tebal
+   * @param {boolean} [options.underline=false] - Cetak dengan garis bawah
+   * @param {string} [options.size="normal"] - Ukuran teks: "normal" atau "double"
+   * 
+   * @example
+   * // Mencetak tabel sederhana dengan 4 kolom
+   * await print.writeTextMultiColumn(
+   *   ["1", "Nasi Goreng", "2x", "Rp 50.000"],
+   *   {
+   *     columnWidths: [3, 15, 5, 9], // Total: 32 char (58mm)
+   *     align: ["left", "left", "center", "right"]
+   *   }
+   * );
+   * // Output: "1  Nasi Goreng       2x   Rp 50.000"
+   * 
+   * @example
+   * // Dengan auto width (dibagi rata)
+   * await print.writeTextMultiColumn(
+   *   ["No", "Item", "Price"],
+   *   { align: ["left", "left", "right"] }
+   * );
+   * 
+   * @example
+   * // Header tabel dengan bold
+   * await print.writeTextMultiColumn(
+   *   ["No", "Item", "Qty", "Price"],
+   *   { 
+   *     columnWidths: [3, 15, 5, 9],
+   *     align: ["left", "left", "center", "right"],
+   *     bold: true 
+   *   }
+   * );
+   */
+  async writeTextMultiColumn(
+    columns: string[],
+    options: {
+      columnWidths?: number[];
+      align?: string[];
+      bold?: boolean;
+      underline?: boolean;
+      size?: string;
+    } = {}
+  ) {
+    const device = this.printChar;
+    if (!device) return;
+
+    // Validate input
+    if (!columns || columns.length === 0) {
+      throw new Error("Columns array cannot be empty");
+    }
+
+    const {
+      bold = false,
+      underline = false,
+      size = "normal",
+    } = options;
+
+    // Format the text with multiple columns
+    const formattedText = this.createMultiColumnData(columns, options);
+
+    // Print using appropriate method
+    if (this.printerType === "usb") {
+      await this.writeUsbTextMultiColumn(formattedText, {
+        bold,
+        underline,
+        size,
+      });
+    } else {
+      await this.writeBluetoothTextMultiColumn(
+        formattedText,
+        { bold, underline, size },
+        device as BluetoothRemoteGATTCharacteristic
+      );
+    }
+  }
+
+  /**
+   * Method internal untuk memformat teks multiple kolom
+   * Menambahkan spasi dan alignment sesuai konfigurasi
+   * 
+   * @private
+   * @param {string[]} columns - Array berisi teks untuk setiap kolom
+   * @param {Object} options - Opsi layout kolom
+   * @returns {string} Teks yang sudah diformat dengan spasi
+   */
+  private createMultiColumnData(
+    columns: string[],
+    options: {
+      columnWidths?: number[];
+      align?: string[];
+    }
+  ): string {
+    const totalChar = this.paperSize === "58" ? 32 : 42;
+    const numColumns = columns.length;
+    
+    // Calculate column widths
+    let columnWidths: number[];
+    if (options.columnWidths && options.columnWidths.length === numColumns) {
+      columnWidths = options.columnWidths;
+      
+      // Validate total width
+      const totalWidth = columnWidths.reduce((sum, width) => sum + width, 0);
+      if (totalWidth > totalChar) {
+        throw new Error(
+          `Total column widths (${totalWidth}) exceeds paper width (${totalChar})`
+        );
+      }
+    } else {
+      // Auto-calculate equal widths
+      const widthPerColumn = Math.floor(totalChar / numColumns);
+      columnWidths = new Array(numColumns).fill(widthPerColumn);
+      
+      // Distribute remaining space
+      const remainder = totalChar - (widthPerColumn * numColumns);
+      for (let i = 0; i < remainder; i++) {
+        columnWidths[i]++;
+      }
+    }
+
+    // Set alignment for each column (default: left)
+    const alignments = options.align || new Array(numColumns).fill("left");
+
+    // Format each column
+    let result = "";
+    for (let i = 0; i < numColumns; i++) {
+      let text = columns[i] || "";
+      const width = columnWidths[i];
+      const alignment = alignments[i] || "left";
+
+      // Truncate if text is too long
+      if (text.length > width) {
+        text = text.substring(0, width - 1) + "~";
+      }
+
+      // Apply alignment
+      if (alignment === "right") {
+        result += text.padStart(width, " ");
+      } else if (alignment === "center") {
+        const totalPadding = width - text.length;
+        const leftPadding = Math.floor(totalPadding / 2);
+        const rightPadding = totalPadding - leftPadding;
+        result += " ".repeat(leftPadding) + text + " ".repeat(rightPadding);
+      } else {
+        // left alignment
+        result += text.padEnd(width, " ");
+      }
+    }
+
+    return result.trim();
+  }
+
+  /**
+   * Method internal untuk mencetak teks multiple kolom via USB
+   * 
+   * @private
+   */
+  private async writeUsbTextMultiColumn(
+    text: string,
+    {
+      bold = false,
+      underline = false,
+      size = "normal",
+    }: {
+      bold?: boolean;
+      underline?: boolean;
+      size?: string;
+    }
+  ) {
+    const device = this.printChar as USBDevice;
+    const textData = [
+      0x1b,
+      0x21,
+      bold ? 0x8 : 0x0,
+      0x1b,
+      0x2d,
+      underline ? 0x1 : 0x0,
+      0x1b,
+      0x61,
+      0x0, // Always left align for multi-column (alignment is in the text itself)
+      0x1d,
+      0x21,
+      size === "double" ? 0x11 : 0x0,
+      ...this.encoder.encode(text),
+      0x0a,
+    ];
+
+    try {
+      const usbConfig = device.configuration;
+      if (!usbConfig)
+        throw new Error("No suitable configuration found for USB printing.");
+      const usbEndPoints = usbConfig.interfaces[0].alternate.endpoints.find(
+        (endpoint) => endpoint.direction === "out"
+      );
+      if (!usbEndPoints)
+        throw new Error("No suitable endpoint found for USB printing.");
+      await device.transferOut(
+        usbEndPoints.endpointNumber,
+        new Uint8Array(textData)
+      );
+    } catch {
+      throw new Error("Failed to print via USB");
+    }
+  }
+
+  /**
+   * Method internal untuk mencetak teks multiple kolom via Bluetooth
+   * 
+   * @private
+   */
+  private async writeBluetoothTextMultiColumn(
+    text: string,
+    {
+      bold = false,
+      underline = false,
+      size = "normal",
+    }: {
+      bold?: boolean;
+      underline?: boolean;
+      size?: string;
+    },
+    device: BluetoothRemoteGATTCharacteristic
+  ) {
+    if (bold) await device.writeValue(this.boldOn.buffer as ArrayBuffer);
+    if (underline) await device.writeValue(this.underlineOn.buffer as ArrayBuffer);
+    
+    // Always left align for multi-column (alignment is in the text itself)
+    await device.writeValue(this.left.buffer as ArrayBuffer);
+
+    if (size === "double") await device.writeValue(this.doubleSize.buffer as ArrayBuffer);
+
+    await device.writeValue(this.encoder.encode(text).buffer as ArrayBuffer);
+    await this.setDefault(device);
+    await this.writeLineBreak();
+  }
+
+  /**
    * Mencetak teks dengan berbagai opsi format
    * Method utama untuk mencetak teks dengan atau tanpa format
    * 

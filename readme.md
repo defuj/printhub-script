@@ -14,9 +14,10 @@ PrintHub is a JavaScript plugin for printing text using a Bluetooth or USB therm
 3. Print Image from URL with alignment option.
 4. Print text with various options like bold, underline, alignment, and text size.
 5. Print text in two columns.
-6. Print dashed lines.
-7. Print line breaks.
-8. Supports two paper sizes: "58mm" and "80mm".
+6. **Print text in multiple columns (3+)** - Perfect for tables with quantity, price, and more. 🆕
+7. Print dashed lines.
+8. Print line breaks.
+9. Supports two paper sizes: "58mm" and "80mm".
 9. Supports connecting to Bluetooth thermal printers.
 10. Supports connecting to USB thermal printers.
 11. Compatible with modern browsers such as Chrome, Firefox, and Edge.
@@ -54,7 +55,7 @@ const PrintHub = require("printhub");
 Or use specific version:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/printhub@1.2.1/dist/index.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/printhub@1.3.0/dist/index.global.js"></script>
 ```
 
 ## Usage
@@ -214,7 +215,37 @@ printer.connectToPrint({
    });
    ```
 
-7. Print dashed lines.
+7. **Print text in multiple columns (3+)** 🆕
+
+   ```javascript
+   printer.connectToPrint({
+     onReady: async (print) => {
+       // Print a 4-column table header
+       await print.writeTextMultiColumn(
+         ["No", "Item", "Qty", "Price"],
+         {
+           columnWidths: [3, 15, 5, 9], // Custom widths (total: 32 for 58mm)
+           align: ["left", "left", "center", "right"],
+           bold: true
+         }
+       );
+       
+       // Print table rows
+       await print.writeTextMultiColumn(
+         ["1", "Nasi Goreng", "2x", "Rp 50.000"],
+         {
+           columnWidths: [3, 15, 5, 9],
+           align: ["left", "left", "center", "right"]
+         }
+       );
+     },
+     onFailed: (message) => {
+       console.log(message);
+     },
+   });
+   ```
+
+8. Print dashed lines.
 
    ```javascript
    printer.connectToPrint({
@@ -227,7 +258,7 @@ printer.connectToPrint({
    });
    ```
 
-8. Print line breaks.
+9. Print line breaks.
 
    ```javascript
    printer.connectToPrint({
@@ -240,7 +271,7 @@ printer.connectToPrint({
    });
    ```
 
-9. Print text with multiple options.
+10. Print text with multiple options.
 
    ```javascript
    printer.connectToPrint({
@@ -258,7 +289,7 @@ printer.connectToPrint({
    });
    ```
 
-10. Print text with multiple options in two columns.
+11. Print text with multiple options in two columns.
 
     ```javascript
     printer.connectToPrint({
@@ -276,7 +307,7 @@ printer.connectToPrint({
     });
     ```
 
-11. Print an image from a URL.
+12. Print an image from a URL.
 
     ```javascript
     printer.connectToPrint({
@@ -291,7 +322,7 @@ printer.connectToPrint({
     });
     ```
 
-12. **Print QR Code** 🆕
+13. **Print QR Code** 🆕
 
     Print QR codes for payment (QRIS), URLs, tracking numbers, or any data. Perfect for modern receipts!
 
@@ -370,7 +401,7 @@ printer.connectToPrint({
 
     For more details, see [QR Code Guide](./QR_CODE_GUIDE.md).
 
-13. **Print Barcode** 🆕
+14. **Print Barcode** 🆕
 
     Print barcodes in various formats for products, invoices, tickets, and inventory management.
     
@@ -469,16 +500,27 @@ printer.connectToPrint({
 
 ### API
 
-| Method                                        | Description                                                             |
-| --------------------------------------------- | ----------------------------------------------------------------------- |
-| `writeLineBreak({ count = 1 })`               | Writes a line break.                                                    |
-| `writeDashLine()`                             | Writes a dashed line.                                                   |
-| `writeTextWith2Column(text1, text2, options)` | Writes text in two columns.                                             |
-| `writeText(text, options)`                    | Writes text.                                                            |
-| `connectToPrint({ onReady, onFailed })`       | Connects to the printer and calls the `onReady` or `onFailed` callback. |
-| `putImageWithUrl(url, options)`               | Prints an image from a URL.                                             |
-| `printQRCode(text, options)` 🆕                | Generates and prints a QR code.                                          |
-| `printBarcode(text, options)` 🆕               | Generates and prints a barcode.                                          |
+| Method                                           | Description                                                             |
+| ------------------------------------------------ | ----------------------------------------------------------------------- |
+| `writeLineBreak({ count = 1 })`                  | Writes a line break.                                                    |
+| `writeDashLine()`                                | Writes a dashed line.                                                   |
+| `writeTextWith2Column(text1, text2, options)`    | Writes text in two columns.                                             |
+| `writeTextMultiColumn(columns, options)` 🆕       | Writes text in multiple columns (3+).                                   |
+| `writeText(text, options)`                       | Writes text.                                                            |
+| `connectToPrint({ onReady, onFailed })`          | Connects to the printer and calls the `onReady` or `onFailed` callback. |
+| `putImageWithUrl(url, options)`                  | Prints an image from a URL.                                             |
+| `printQRCode(text, options)` 🆕                   | Generates and prints a QR code.                                          |
+| `printBarcode(text, options)` 🆕                  | Generates and prints a barcode.                                          |
+
+### Options for `writeTextMultiColumn` Method 🆕
+
+| Option         | Type       | Description                                                    | Default  |
+| -------------- | ---------- | -------------------------------------------------------------- | -------- |
+| `columnWidths` | number[]   | Width of each column in characters. Auto-calculated if not set | Auto     |
+| `align`        | string[]   | Alignment for each column: "left", "center", "right"          | `"left"` |
+| `bold`         | boolean    | Print text in bold                                            | `false`  |
+| `underline`    | boolean    | Print text with underline                                     | `false`  |
+| `size`         | string     | Text size: "normal" or "double"                               | `"normal"` |
 
 ### Options for `printQRCode` Method 🆕
 
@@ -639,6 +681,19 @@ PrintHub is perfect for various business needs:
 | WebView | No      | ❌     |
 
 ## Change Log
+
+### v1.3.0 🎉
+
+- **NEW FEATURE**: `writeTextMultiColumn()` - Print text in 3 or more columns for advanced table layouts
+- Support for 3+ columns with custom or auto-calculated widths
+- Individual alignment per column (left, center, right)
+- Perfect for receipts with item number, name, quantity, and price
+- Bold, underline, and size options for each row
+- Smart text truncation with "~" indicator for overflow
+- Works seamlessly with both 58mm (32 chars) and 80mm (42 chars) paper
+- Full Bluetooth and USB printer support
+- Automatic width validation to prevent paper overflow
+- See [Multi-Column Guide](./MULTICOLUMN_GUIDE.md) for complete usage examples and best practices
 
 ### v1.2.1 🔧
 

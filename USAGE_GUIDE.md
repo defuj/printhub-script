@@ -9,6 +9,7 @@ Dokumentasi lengkap untuk menggunakan semua fungsi PrintHub library.
 - [Fungsi-Fungsi Pencetakan](#fungsi-fungsi-pencetakan)
   - [writeText](#writetext---mencetak-teks)
   - [writeTextWith2Column](#writetextwith2column---mencetak-2-kolom)
+  - [writeTextMultiColumn](#writetextmulticolumn---mencetak-3-kolom) 🆕
   - [writeDashLine](#writedashline---mencetak-garis-putus-putus)
   - [writeLineBreak](#writelinebreak---mencetak-baris-kosong)
   - [putImageWithUrl](#putimagewithurl---mencetak-gambar-dari-url)
@@ -203,6 +204,85 @@ TOTAL                    Rp 30.000
 
 ---
 
+### writeTextMultiColumn() - Mencetak 3+ Kolom
+
+Mencetak teks dalam 3 atau lebih kolom. Berguna untuk mencetak tabel dengan data yang lebih kompleks seperti No, Item, Quantity, dan Price.
+
+**Syntax:**
+```javascript
+await print.writeTextMultiColumn(columns, options);
+```
+
+**Parameters:**
+
+| Parameter | Tipe | Default | Deskripsi |
+|-----------|------|---------|-----------|
+| `columns` | string[] | - | Array berisi teks untuk setiap kolom |
+| `options.columnWidths` | number[] | Auto | Lebar setiap kolom dalam karakter. Jika tidak diset, akan dibagi rata |
+| `options.align` | string[] | ["left",...] | Alignment untuk setiap kolom: "left", "center", "right" |
+| `options.bold` | boolean | false | Cetak dengan huruf tebal |
+| `options.underline` | boolean | false | Cetak dengan garis bawah |
+| `options.size` | string | "normal" | Ukuran: "normal", "double" |
+
+**Contoh:**
+```javascript
+// Tabel sederhana dengan 4 kolom
+await print.writeTextMultiColumn(
+  ["No", "Item", "Qty", "Price"],
+  {
+    columnWidths: [3, 15, 5, 9], // Total: 32 char (58mm)
+    align: ["left", "left", "center", "right"],
+    bold: true
+  }
+);
+
+// Data baris
+await print.writeTextMultiColumn(
+  ["1", "Nasi Goreng", "2x", "Rp 50.000"],
+  {
+    columnWidths: [3, 15, 5, 9],
+    align: ["left", "left", "center", "right"]
+  }
+);
+
+// Dengan auto width (dibagi rata)
+await print.writeTextMultiColumn(
+  ["Left", "Center", "Right"],
+  { align: ["left", "center", "right"] }
+);
+
+// Total dengan merge kolom
+await print.writeTextMultiColumn(
+  ["", "", "TOTAL:", "Rp 150.000"],
+  {
+    columnWidths: [3, 15, 5, 9],
+    align: ["left", "left", "right", "right"],
+    bold: true,
+    size: "double"
+  }
+);
+```
+
+**Output (kertas 58mm):**
+```
+No Item            Qty   Price
+1  Nasi Goreng     2x   Rp 50.000
+2  Es Teh          3x   Rp 15.000
+--------------------------------
+              TOTAL:  Rp 150.000
+```
+
+**Tips:**
+- **58mm paper**: Total width adalah 32 karakter
+- **80mm paper**: Total width adalah 42 karakter
+- Gunakan `columnWidths` untuk kontrol lebih presisi
+- Jika tidak set, lebar kolom akan dibagi rata otomatis
+- Text yang terlalu panjang akan dipotong dengan tanda "~"
+- Gunakan alignment "right" untuk kolom harga/angka
+- Gunakan alignment "center" untuk kolom quantity/status
+
+---
+
 ### writeDashLine() - Mencetak Garis Putus-Putus
 
 Mencetak garis pemisah (dash line) yang otomatis menyesuaikan dengan ukuran kertas.
@@ -387,7 +467,107 @@ printer.connectToPrint({
 });
 ```
 
-### Contoh 3: Dengan Error Handling Lengkap
+### Contoh 3: Struk dengan Multi Column (Tabel) 🆕
+
+```javascript
+const printer = new PrintHub({ paperSize: "58" });
+
+printer.connectToPrint({
+  onReady: async (print) => {
+    // Header
+    await print.writeText("RESTO JAYA", { 
+      align: "center", 
+      bold: true, 
+      size: "double" 
+    });
+    await print.writeText("Jl. Sudirman No. 45", { align: "center" });
+    await print.writeDashLine();
+    
+    // Invoice Info
+    await print.writeTextWith2Column("No Nota", "INV-001");
+    await print.writeTextWith2Column("Tanggal", "10/10/2024");
+    await print.writeDashLine();
+    
+    // Table Header dengan 4 kolom
+    await print.writeTextMultiColumn(
+      ["No", "Item", "Qty", "Harga"],
+      {
+        columnWidths: [3, 14, 5, 10],
+        align: ["left", "left", "center", "right"],
+        bold: true,
+        underline: true
+      }
+    );
+    
+    // Table Rows
+    await print.writeTextMultiColumn(
+      ["1", "Nasi Goreng", "2", "50.000"],
+      {
+        columnWidths: [3, 14, 5, 10],
+        align: ["left", "left", "center", "right"]
+      }
+    );
+    
+    await print.writeTextMultiColumn(
+      ["2", "Es Teh Manis", "3", "15.000"],
+      {
+        columnWidths: [3, 14, 5, 10],
+        align: ["left", "left", "center", "right"]
+      }
+    );
+    
+    await print.writeTextMultiColumn(
+      ["3", "Ayam Bakar", "1", "35.000"],
+      {
+        columnWidths: [3, 14, 5, 10],
+        align: ["left", "left", "center", "right"]
+      }
+    );
+    
+    await print.writeDashLine();
+    
+    // Subtotal
+    await print.writeTextMultiColumn(
+      ["", "", "Subtotal:", "100.000"],
+      {
+        columnWidths: [3, 14, 5, 10],
+        align: ["left", "left", "right", "right"]
+      }
+    );
+    
+    // Tax
+    await print.writeTextMultiColumn(
+      ["", "", "Pajak 10%:", "10.000"],
+      {
+        columnWidths: [3, 14, 5, 10],
+        align: ["left", "left", "right", "right"]
+      }
+    );
+    
+    await print.writeDashLine();
+    
+    // Total
+    await print.writeTextMultiColumn(
+      ["", "", "TOTAL:", "110.000"],
+      {
+        columnWidths: [3, 14, 5, 10],
+        align: ["left", "left", "right", "right"],
+        bold: true,
+        size: "double"
+      }
+    );
+    
+    await print.writeDashLine();
+    await print.writeText("Terima Kasih", { align: "center" });
+    await print.writeLineBreak({ count: 3 });
+  },
+  onFailed: (message) => {
+    alert("Gagal terhubung: " + message);
+  }
+});
+```
+
+### Contoh 4: Dengan Error Handling Lengkap
 
 ```javascript
 const printer = new PrintHub({ 

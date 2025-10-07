@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrintHub - Multi Column Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .feature-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .settings {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .setting-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .examples {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .examples h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .example-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            border-left: 4px solid #667eea;
+        }
+
+        .example-title {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        .info-box h4 {
+            color: #2196F3;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .info-box li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="feature-badge">🆕 NEW FEATURE</div>
+        <h1>🖨️ PrintHub Multi Column</h1>
+        <p class="subtitle">Test the new writeTextMultiColumn() feature for 3+ columns printing</p>
+
+        <div class="settings">
+            <div class="setting-group">
+                <label for="paperSize">📏 Paper Size:</label>
+                <select id="paperSize">
+                    <option value="58">58mm (32 characters)</option>
+                    <option value="80">80mm (42 characters)</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label for="printerType">🔌 Printer Type:</label>
+                <select id="printerType">
+                    <option value="bluetooth">Bluetooth</option>
+                    <option value="usb">USB</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn-primary" onclick="testMultiColumn()">
+                🖨️ Test Multi Column
+            </button>
+            <button class="btn-secondary" onclick="testCompleteReceipt()">
+                📄 Test Complete Receipt
+            </button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div class="info-box">
+            <h4>ℹ️ What This Test Does:</h4>
+            <ul>
+                <li><strong>Test 1:</strong> Prints a 4-column table (No, Item, Qty, Price)</li>
+                <li><strong>Test 2:</strong> Prints a complete receipt with header, items, and total</li>
+                <li>Demonstrates different column widths and alignments</li>
+                <li>Shows both fixed and auto-calculated column widths</li>
+            </ul>
+        </div>
+
+        <div class="examples">
+            <h3>📝 Example Usage:</h3>
+            
+            <div class="example-item">
+                <div class="example-title">Basic Usage (Auto Width)</div>
+                <pre class="code-block">await print.writeTextMultiColumn(
+  ["No", "Item", "Price"],
+  { align: ["left", "left", "right"] }
+);</pre>
+            </div>
+
+            <div class="example-item">
+                <div class="example-title">With Custom Column Widths</div>
+                <pre class="code-block">await print.writeTextMultiColumn(
+  ["1", "Nasi Goreng", "2x", "Rp 50.000"],
+  {
+    columnWidths: [3, 15, 5, 9],
+    align: ["left", "left", "center", "right"]
+  }
+);</pre>
+            </div>
+
+            <div class="example-item">
+                <div class="example-title">With Styling Options</div>
+                <pre class="code-block">await print.writeTextMultiColumn(
+  ["TOTAL", "", "", "Rp 150.000"],
+  {
+    columnWidths: [5, 10, 5, 12],
+    align: ["left", "left", "center", "right"],
+    bold: true,
+    size: "double"
+  }
+);</pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="./dist/index.global.js"></script>
+    <script>
+        function showStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.className = 'status ' + (isError ? 'error' : 'success');
+            status.textContent = message;
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+
+        async function testMultiColumn() {
+            try {
+                const paperSize = document.getElementById('paperSize').value;
+                const printerType = document.getElementById('printerType').value;
+
+                const printer = new PrintHub.init({
+                    paperSize: paperSize,
+                    printerType: printerType
+                });
+
+                printer.connectToPrint({
+                    onReady: async (print) => {
+                        try {
+                            // Header
+                            await print.writeText("MULTI COLUMN TEST", {
+                                align: "center",
+                                bold: true,
+                                size: "double"
+                            });
+                            await print.writeDashLine();
+                            await print.writeLineBreak();
+
+                            // Table Header - 4 columns
+                            await print.writeTextMultiColumn(
+                                ["No", "Item", "Qty", "Price"],
+                                {
+                                    columnWidths: [3, 15, 5, 9],
+                                    align: ["left", "left", "center", "right"],
+                                    bold: true,
+                                    underline: true
+                                }
+                            );
+
+                            // Table Rows
+                            await print.writeTextMultiColumn(
+                                ["1", "Nasi Goreng", "2x", "Rp 50.000"],
+                                {
+                                    columnWidths: [3, 15, 5, 9],
+                                    align: ["left", "left", "center", "right"]
+                                }
+                            );
+
+                            await print.writeTextMultiColumn(
+                                ["2", "Es Teh Manis", "3x", "Rp 15.000"],
+                                {
+                                    columnWidths: [3, 15, 5, 9],
+                                    align: ["left", "left", "center", "right"]
+                                }
+                            );
+
+                            await print.writeTextMultiColumn(
+                                ["3", "Ayam Bakar", "1x", "Rp 35.000"],
+                                {
+                                    columnWidths: [3, 15, 5, 9],
+                                    align: ["left", "left", "center", "right"]
+                                }
+                            );
+
+                            await print.writeDashLine();
+
+                            // Total with merged columns
+                            await print.writeTextMultiColumn(
+                                ["", "", "TOTAL:", "Rp 100.000"],
+                                {
+                                    columnWidths: [3, 15, 5, 9],
+                                    align: ["left", "left", "right", "right"],
+                                    bold: true
+                                }
+                            );
+
+                            await print.writeLineBreak();
+                            await print.writeDashLine();
+
+                            // Test with 3 columns (auto width)
+                            await print.writeText("AUTO WIDTH TEST:", { bold: true });
+                            await print.writeTextMultiColumn(
+                                ["Left", "Center", "Right"],
+                                { align: ["left", "center", "right"] }
+                            );
+
+                            await print.writeLineBreak({ count: 3 });
+
+                            showStatus("✅ Multi column test printed successfully!");
+                        } catch (error) {
+                            showStatus("❌ Error during printing: " + error.message, true);
+                        }
+                    },
+                    onFailed: (message) => {
+                        showStatus("❌ Connection failed: " + message, true);
+                    }
+                });
+            } catch (error) {
+                showStatus("❌ Error: " + error.message, true);
+            }
+        }
+
+        async function testCompleteReceipt() {
+            try {
+                const paperSize = document.getElementById('paperSize').value;
+                const printerType = document.getElementById('printerType').value;
+
+                const printer = new PrintHub.init({
+                    paperSize: paperSize,
+                    printerType: printerType
+                });
+
+                printer.connectToPrint({
+                    onReady: async (print) => {
+                        try {
+                            // Store Header
+                            await print.writeText("TOKO MAJU JAYA", {
+                                align: "center",
+                                bold: true,
+                                size: "double"
+                            });
+                            await print.writeText("Jl. Contoh No. 123", { align: "center" });
+                            await print.writeText("Telp: 021-12345678", { align: "center" });
+                            await print.writeDashLine();
+
+                            // Receipt Info
+                            await print.writeTextWith2Column("No Nota", "INV-2024-001");
+                            await print.writeTextWith2Column("Tanggal", new Date().toLocaleDateString('id-ID'));
+                            await print.writeTextWith2Column("Kasir", "John Doe");
+                            await print.writeDashLine();
+
+                            // Items Table Header
+                            await print.writeTextMultiColumn(
+                                ["No", "Item", "Qty", "Harga"],
+                                {
+                                    columnWidths: [3, 14, 5, 10],
+                                    align: ["left", "left", "center", "right"],
+                                    bold: true
+                                }
+                            );
+                            await print.writeDashLine();
+
+                            // Items
+                            const items = [
+                                ["1", "Nasi Goreng Sp", "2", "25.000"],
+                                ["2", "Es Teh", "3", "5.000"],
+                                ["3", "Ayam Bakar", "1", "30.000"],
+                                ["4", "Soto Ayam", "2", "20.000"],
+                                ["5", "Jus Jeruk", "2", "12.000"]
+                            ];
+
+                            for (const item of items) {
+                                await print.writeTextMultiColumn(
+                                    item,
+                                    {
+                                        columnWidths: [3, 14, 5, 10],
+                                        align: ["left", "left", "center", "right"]
+                                    }
+                                );
+                            }
+
+                            await print.writeDashLine();
+
+                            // Subtotal
+                            await print.writeTextMultiColumn(
+                                ["", "", "Subtotal:", "109.000"],
+                                {
+                                    columnWidths: [3, 14, 5, 10],
+                                    align: ["left", "left", "right", "right"]
+                                }
+                            );
+
+                            // Tax
+                            await print.writeTextMultiColumn(
+                                ["", "", "Pajak 10%:", "10.900"],
+                                {
+                                    columnWidths: [3, 14, 5, 10],
+                                    align: ["left", "left", "right", "right"]
+                                }
+                            );
+
+                            await print.writeDashLine();
+
+                            // Total
+                            await print.writeTextMultiColumn(
+                                ["", "", "TOTAL:", "119.900"],
+                                {
+                                    columnWidths: [3, 14, 5, 10],
+                                    align: ["left", "left", "right", "right"],
+                                    bold: true,
+                                    size: "double"
+                                }
+                            );
+
+                            await print.writeDashLine();
+
+                            // Payment
+                            await print.writeTextWith2Column("Bayar", "Rp 150.000");
+                            await print.writeTextWith2Column("Kembali", "Rp 30.100", { bold: true });
+
+                            await print.writeDashLine();
+
+                            // Footer
+                            await print.writeText("Terima Kasih", { align: "center" });
+                            await print.writeText("Selamat Datang Kembali", { align: "center" });
+                            await print.writeLineBreak({ count: 3 });
+
+                            showStatus("✅ Complete receipt printed successfully!");
+                        } catch (error) {
+                            showStatus("❌ Error during printing: " + error.message, true);
+                        }
+                    },
+                    onFailed: (message) => {
+                        showStatus("❌ Connection failed: " + message, true);
+                    }
+                });
+            } catch (error) {
+                showStatus("❌ Error: " + error.message, true);
+            }
+        }
+    </script>
+</body>
+</html>
