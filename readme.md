@@ -56,7 +56,7 @@ const PrintHub = require("printhub");
 Or use specific version:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/printhub@1.3.0/dist/index.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/printhub@1.3.1/dist/index.global.js"></script>
 ```
 
 ## Usage
@@ -722,7 +722,7 @@ PrintHub is perfect for various business needs:
 
 ## Change Log
 
-### v1.3.0 🎉
+### v1.3.1 🎉
 
 - **NEW FEATURE**: `writeTextMultiColumn()` - Print text in 3 or more columns for advanced table layouts
 - **NEW FEATURE**: `writeWrappedText()` - Automatically wrap long text to multiple lines
@@ -730,13 +730,18 @@ PrintHub is perfect for various business needs:
 - Individual alignment per column (left, center, right)
 - Perfect for receipts with item number, name, quantity, and price
 - Auto-wrapping for addresses, descriptions, terms & conditions, and notes
+- Word preservation - no mid-word breaks
+- Justify alignment support with even word spacing
 - Bold, underline, and size options for each row
 - Smart text truncation with "~" indicator for overflow
-- Justify alignment support with even word spacing
 - Works seamlessly with both 58mm (32 chars) and 80mm (42 chars) paper
 - Full Bluetooth and USB printer support
 - Automatic width validation to prevent paper overflow
-- See [Multi-Column Guide](./MULTICOLUMN_GUIDE.md) for complete usage examples and best practices
+- See [Multi-Column Guide](./MULTICOLUMN_GUIDE.md) and [Wrapped Text Guide](./WRAPPEDTEXT_GUIDE.md) for complete usage examples
+
+### v1.3.0 🎉
+
+- Initial release of multi-column and wrapped text features (consolidated into v1.3.1)
 
 ### v1.2.1 🔧
 
