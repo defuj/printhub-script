@@ -21,7 +21,7 @@ Dokumen ini berisi ide-ide fitur yang bisa ditambahkan untuk meningkatkan fungsi
 
 ## 1. Fitur Pencetakan Teks Lanjutan
 
-### 1.1 ✅ **writeTextMultiColumn()** - Cetak 3+ Kolom (COMPLETED v1.3.0)
+### 1.1 ✅ **writeTextMultiColumn()** - Cetak 3+ Kolom (COMPLETED v1.3.1)
 **Prioritas:** 🔥 High | **Difficulty:** ⭐⭐ Medium | **Status:** ✅ DONE
 
 Mencetak teks dalam 3 atau lebih kolom untuk struk yang lebih kompleks.
@@ -53,8 +53,8 @@ await print.writeTextMultiColumn(
 
 ---
 
-### 1.2 ✨ **writeWrappedText()** - Text Auto-Wrapping
-**Prioritas:** 🔥 High | **Difficulty:** ⭐ Easy
+### 1.2 ✅ **writeWrappedText()** - Text Auto-Wrapping (COMPLETED v1.3.1)
+**Prioritas:** 🔥 High | **Difficulty:** ⭐ Easy | **Status:** ✅ DONE
 
 Teks panjang otomatis di-wrap sesuai lebar kertas.
 
@@ -70,6 +70,16 @@ await print.writeWrappedText(
 - Deskripsi produk
 - Terms & conditions
 - Notes/catatan
+
+**Implementation Notes:**
+- ✅ Auto word-wrapping based on paper width
+- ✅ Word preservation (no mid-word breaks)
+- ✅ Justify alignment with even spacing
+- ✅ Support for left, center, right, justify
+- ✅ Custom maxWidth option
+- ✅ Works with 58mm and 80mm paper
+- ✅ Bold, underline, and size options
+- ✅ Smart handling of very long words
 
 ---
 

@@ -15,9 +15,10 @@ PrintHub is a JavaScript plugin for printing text using a Bluetooth or USB therm
 4. Print text with various options like bold, underline, alignment, and text size.
 5. Print text in two columns.
 6. **Print text in multiple columns (3+)** - Perfect for tables with quantity, price, and more. 🆕
-7. Print dashed lines.
-8. Print line breaks.
-9. Supports two paper sizes: "58mm" and "80mm".
+7. **Auto-wrap long text** - Automatically wrap long text to multiple lines based on paper width. 🆕
+8. Print dashed lines.
+9. Print line breaks.
+10. Supports two paper sizes: "58mm" and "80mm".
 9. Supports connecting to Bluetooth thermal printers.
 10. Supports connecting to USB thermal printers.
 11. Compatible with modern browsers such as Chrome, Firefox, and Edge.
@@ -55,7 +56,7 @@ const PrintHub = require("printhub");
 Or use specific version:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/printhub@1.3.0/dist/index.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/printhub@1.3.1/dist/index.global.js"></script>
 ```
 
 ## Usage
@@ -245,7 +246,35 @@ printer.connectToPrint({
    });
    ```
 
-8. Print dashed lines.
+8. **Print long text with auto-wrapping** 🆕
+
+   ```javascript
+   printer.connectToPrint({
+     onReady: async (print) => {
+       // Long text automatically wraps to multiple lines
+       await print.writeWrappedText(
+         "Jl. Sudirman No. 123, Blok A, RT 01/RW 02, Kelurahan Menteng, Kecamatan Menteng, Jakarta Pusat 10310"
+       );
+       
+       // With justify alignment for even spacing
+       await print.writeWrappedText(
+         "Produk ini adalah hasil penelitian panjang yang menghasilkan kualitas terbaik dengan harga terjangkau",
+         { align: "justify" }
+       );
+       
+       // Terms & conditions with bold
+       await print.writeWrappedText(
+         "SYARAT DAN KETENTUAN: Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan kecuali ada cacat produksi",
+         { bold: true }
+       );
+     },
+     onFailed: (message) => {
+       console.log(message);
+     },
+   });
+   ```
+
+9. Print dashed lines.
 
    ```javascript
    printer.connectToPrint({
@@ -258,7 +287,7 @@ printer.connectToPrint({
    });
    ```
 
-9. Print line breaks.
+10. Print line breaks.
 
    ```javascript
    printer.connectToPrint({
@@ -271,7 +300,7 @@ printer.connectToPrint({
    });
    ```
 
-10. Print text with multiple options.
+11. Print text with multiple options.
 
    ```javascript
    printer.connectToPrint({
@@ -506,11 +535,22 @@ printer.connectToPrint({
 | `writeDashLine()`                                | Writes a dashed line.                                                   |
 | `writeTextWith2Column(text1, text2, options)`    | Writes text in two columns.                                             |
 | `writeTextMultiColumn(columns, options)` 🆕       | Writes text in multiple columns (3+).                                   |
+| `writeWrappedText(text, options)` 🆕              | Automatically wraps long text to multiple lines.                        |
 | `writeText(text, options)`                       | Writes text.                                                            |
 | `connectToPrint({ onReady, onFailed })`          | Connects to the printer and calls the `onReady` or `onFailed` callback. |
 | `putImageWithUrl(url, options)`                  | Prints an image from a URL.                                             |
 | `printQRCode(text, options)` 🆕                   | Generates and prints a QR code.                                          |
 | `printBarcode(text, options)` 🆕                  | Generates and prints a barcode.                                          |
+
+### Options for `writeWrappedText` Method 🆕
+
+| Option      | Type     | Description                                                    | Default    |
+| ----------- | -------- | -------------------------------------------------------------- | ---------- |
+| `bold`      | boolean  | Print text in bold                                            | `false`    |
+| `underline` | boolean  | Print text with underline                                     | `false`    |
+| `align`     | string   | Alignment: "left", "center", "right", "justify"               | `"left"`   |
+| `size`      | string   | Text size: "normal" or "double"                               | `"normal"` |
+| `maxWidth`  | number   | Maximum width per line (default: paper width)                 | Auto       |
 
 ### Options for `writeTextMultiColumn` Method 🆕
 
@@ -682,18 +722,26 @@ PrintHub is perfect for various business needs:
 
 ## Change Log
 
-### v1.3.0 🎉
+### v1.3.1 🎉
 
 - **NEW FEATURE**: `writeTextMultiColumn()` - Print text in 3 or more columns for advanced table layouts
+- **NEW FEATURE**: `writeWrappedText()` - Automatically wrap long text to multiple lines
 - Support for 3+ columns with custom or auto-calculated widths
 - Individual alignment per column (left, center, right)
 - Perfect for receipts with item number, name, quantity, and price
+- Auto-wrapping for addresses, descriptions, terms & conditions, and notes
+- Word preservation - no mid-word breaks
+- Justify alignment support with even word spacing
 - Bold, underline, and size options for each row
 - Smart text truncation with "~" indicator for overflow
 - Works seamlessly with both 58mm (32 chars) and 80mm (42 chars) paper
 - Full Bluetooth and USB printer support
 - Automatic width validation to prevent paper overflow
-- See [Multi-Column Guide](./MULTICOLUMN_GUIDE.md) for complete usage examples and best practices
+- See [Multi-Column Guide](./MULTICOLUMN_GUIDE.md) and [Wrapped Text Guide](./WRAPPEDTEXT_GUIDE.md) for complete usage examples
+
+### v1.3.0 🎉
+
+- Initial release of multi-column and wrapped text features (consolidated into v1.3.1)
 
 ### v1.2.1 🔧
 

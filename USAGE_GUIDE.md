@@ -10,6 +10,7 @@ Dokumentasi lengkap untuk menggunakan semua fungsi PrintHub library.
   - [writeText](#writetext---mencetak-teks)
   - [writeTextWith2Column](#writetextwith2column---mencetak-2-kolom)
   - [writeTextMultiColumn](#writetextmulticolumn---mencetak-3-kolom) 🆕
+  - [writeWrappedText](#writewrappedtext---mencetak-teks-panjang-dengan-auto-wrap) 🆕
   - [writeDashLine](#writedashline---mencetak-garis-putus-putus)
   - [writeLineBreak](#writelinebreak---mencetak-baris-kosong)
   - [putImageWithUrl](#putimagewithurl---mencetak-gambar-dari-url)
@@ -280,6 +281,77 @@ No Item            Qty   Price
 - Text yang terlalu panjang akan dipotong dengan tanda "~"
 - Gunakan alignment "right" untuk kolom harga/angka
 - Gunakan alignment "center" untuk kolom quantity/status
+
+---
+
+### writeWrappedText() - Mencetak Teks Panjang dengan Auto-Wrap
+
+Mencetak teks panjang yang otomatis dibungkus ke beberapa baris sesuai lebar kertas. Berguna untuk alamat, deskripsi produk, terms & conditions, dan catatan panjang.
+
+**Syntax:**
+```javascript
+await print.writeWrappedText(text, options);
+```
+
+**Parameters:**
+
+| Parameter | Tipe | Default | Deskripsi |
+|-----------|------|---------|-----------|
+| `text` | string | - | Teks yang akan dicetak (bisa sangat panjang) |
+| `options.bold` | boolean | false | Cetak dengan huruf tebal |
+| `options.underline` | boolean | false | Cetak dengan garis bawah |
+| `options.align` | string | "left" | Alignment: "left", "center", "right", "justify" |
+| `options.size` | string | "normal" | Ukuran: "normal", "double" |
+| `options.maxWidth` | number | Auto | Lebar maksimal per baris (default: sesuai paper size) |
+
+**Contoh:**
+```javascript
+// Mencetak alamat panjang
+await print.writeWrappedText(
+  "Jl. Sudirman No. 123, Blok A, RT 01/RW 02, Kelurahan Menteng, Kecamatan Menteng, Jakarta Pusat 10310"
+);
+
+// Output (58mm):
+// Jl. Sudirman No. 123, Blok A,
+// RT 01/RW 02, Kelurahan Menteng,
+// Kecamatan Menteng, Jakarta
+// Pusat 10310
+
+// Dengan justify alignment (spasi merata)
+await print.writeWrappedText(
+  "Produk ini adalah hasil dari penelitian panjang yang menghasilkan kualitas terbaik dengan harga yang terjangkau untuk semua kalangan",
+  { align: "justify" }
+);
+
+// Terms & conditions dengan bold
+await print.writeWrappedText(
+  "SYARAT DAN KETENTUAN: Barang yang sudah dibeli tidak dapat ditukar atau dikembalikan kecuali ada cacat produksi. Garansi berlaku 30 hari sejak tanggal pembelian.",
+  { bold: true, align: "left" }
+);
+
+// Custom max width
+await print.writeWrappedText(
+  "Teks ini akan di-wrap dengan lebar maksimal 20 karakter per baris",
+  { maxWidth: 20 }
+);
+```
+
+**Tips:**
+- **Alamat:** Gunakan align "left" untuk alamat yang panjang
+- **Deskripsi:** Gunakan align "justify" untuk tampilan profesional
+- **Terms:** Gunakan bold untuk syarat dan ketentuan penting
+- **Notes:** Cocok untuk catatan pelanggan atau instruksi khusus
+- Teks otomatis mempertahankan kata utuh (tidak dipotong di tengah)
+- Kata yang terlalu panjang akan dipotong jika melebihi lebar kertas
+
+**Output (kertas 58mm dengan align="justify"):**
+```
+Produk  ini  adalah hasil dari
+penelitian panjang yang
+menghasilkan kualitas terbaik
+dengan harga yang terjangkau
+untuk semua kalangan
+```
 
 ---
 

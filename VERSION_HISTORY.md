@@ -4,7 +4,7 @@ Complete version history and release notes for PrintHub library.
 
 ---
 
-## [v1.3.0] - 2024-10-07
+## [v1.3.1] - 2024-10-07
 
 ### 🎉 New Features
 
@@ -30,22 +30,48 @@ await print.writeTextMultiColumn(
 );
 ```
 
+#### `writeWrappedText()` - Auto-Wrapping Text
+- Automatically wrap long text to multiple lines
+- Word preservation (no mid-word breaks)
+- Justify alignment with even word spacing
+- Support for left, center, right, justify alignments
+- Custom maxWidth option
+- Bold, underline, and size options
+- Smart handling of very long words
+
+**Example:**
+```javascript
+await print.writeWrappedText(
+  "Jl. Sudirman No. 123, RT 01/RW 02, Jakarta Pusat 10310",
+  { align: "justify" }
+);
+```
+
 ### 📚 Documentation
-- Added [MULTICOLUMN_GUIDE.md](./MULTICOLUMN_GUIDE.md) - Comprehensive guide
+- Added [MULTICOLUMN_GUIDE.md](./MULTICOLUMN_GUIDE.md) - Comprehensive multi-column guide
+- Added [WRAPPEDTEXT_GUIDE.md](./WRAPPEDTEXT_GUIDE.md) - Comprehensive wrapped text guide
 - Added [IMPLEMENTATION_MULTICOLUMN.md](./IMPLEMENTATION_MULTICOLUMN.md) - Implementation details
-- Added [RELEASE_NOTES_v1.3.0.md](./RELEASE_NOTES_v1.3.0.md) - Release notes
-- Updated README.md with new feature
-- Updated USAGE_GUIDE.md with multi-column section
-- Updated FEATURE_IDEAS.md (marked as completed)
+- Added [WRAPPEDTEXT_SUMMARY.md](./WRAPPEDTEXT_SUMMARY.md) - Implementation summary
+- Updated README.md with both new features
+- Updated USAGE_GUIDE.md with complete sections
+- Updated FEATURE_IDEAS.md (marked both as completed)
 
 ### 🧪 Testing
 - Added test-multicolumn.html - Interactive test page
+- Added test-wrappedtext.html - Interactive test page with live preview
 
 ### 📊 Statistics
-- **Lines Added:** ~250 lines of TypeScript
-- **New Methods:** 1 public, 3 private helpers
-- **Build Size:** 102 KB (unchanged)
+- **Lines Added:** ~450 lines of TypeScript
+- **New Public Methods:** 2
+- **New Private Helpers:** 5
+- **Build Size:** 103 KB (+1 KB)
 - **Zero Breaking Changes**
+
+---
+
+## [v1.3.0] - 2024-10-07
+
+- Initial development version (consolidated into v1.3.1)
 
 ---
 
